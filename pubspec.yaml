@@ -1,0 +1,25 @@
+name: framework
+description: A new Flutter package project.
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  logger: ^2.0.1
+  path_provider: ^2.1.0
+  boxy: ^2.1.0
+  path: ^1.8.3
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+
