@@ -7,14 +7,12 @@ import '../../logger/logger.dart';
 extension GetRectOnRenderBox on GlobalKey {
   Rect get globalRect {
     assert(currentContext != null);
-    final RenderBox renderBoxContainer =
-        currentContext!.findRenderObject()! as RenderBox;
+    final RenderBox renderBoxContainer = currentContext!.findRenderObject()! as RenderBox;
     return Rect.fromPoints(
         renderBoxContainer.localToGlobal(
           renderBoxContainer.paintBounds.topLeft,
         ),
-        renderBoxContainer
-            .localToGlobal(renderBoxContainer.paintBounds.bottomRight));
+        renderBoxContainer.localToGlobal(renderBoxContainer.paintBounds.bottomRight));
   }
 }
 
@@ -41,35 +39,34 @@ Size getTextSize(String text, TextStyle textStyle, BuildContext context) {
 
 extension FlutterViewExt on FlutterView {
   EdgeInsets get realPadding => EdgeInsets.fromViewPadding(
-    padding,
-    devicePixelRatio,
-  );
+        padding,
+        devicePixelRatio,
+      );
 
   Size get screenSize => physicalSize / devicePixelRatio;
 }
 
-
 // for debug purposes
 extension WidgetExtensions on Widget {
   Widget onTap(void Function() function) => GestureDetector(
-    onTap: function,
-    child: this,
-  );
+        onTap: function,
+        child: this,
+      );
 
   Widget centralized() => Center(
-    child: this,
-  );
+        child: this,
+      );
 
   Widget decorated(BoxDecoration boxDecoration) => DecoratedBox(
-    decoration: boxDecoration,
-    child: this,
-  );
+        decoration: boxDecoration,
+        child: this,
+      );
 
   Widget sized({double? width, double? height}) => SizedBox(
-    width: width,
-    height: height,
-    child: this,
-  );
+        width: width,
+        height: height,
+        child: this,
+      );
 
   Widget border({
     EdgeInsets? margin,
@@ -84,11 +81,11 @@ extension WidgetExtensions on Widget {
       );
 
   Widget clipped([BorderRadius borderRadius = BorderRadius.zero]) => ClipRRect(
-    borderRadius: borderRadius,
-    child: this,
-  );
+        borderRadius: borderRadius,
+        child: this,
+      );
 
   Widget unconstrained() => UnconstrainedBox(
-    child: this,
-  );
+        child: this,
+      );
 }

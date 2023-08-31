@@ -8,12 +8,9 @@ class CustomDoubleTapGestureRecognizer extends GestureRecognizer {
     super.debugOwner,
     super.supportedDevices,
     AllowedButtonsFilter? allowedButtonsFilter,
-  }) : super(
-            allowedButtonsFilter:
-                allowedButtonsFilter ?? _defaultButtonAcceptBehavior);
+  }) : super(allowedButtonsFilter: allowedButtonsFilter ?? _defaultButtonAcceptBehavior);
 
-  static bool _defaultButtonAcceptBehavior(int buttons) =>
-      buttons == kPrimaryButton;
+  static bool _defaultButtonAcceptBehavior(int buttons) => buttons == kPrimaryButton;
 
   GestureTapDownCallback? onDoubleTapDown;
 
@@ -28,9 +25,7 @@ class CustomDoubleTapGestureRecognizer extends GestureRecognizer {
   @override
   bool isPointerAllowed(PointerDownEvent event) {
     if (_firstTap == null) {
-      if (onDoubleTapDown == null &&
-          onDoubleTap == null &&
-          onDoubleTapCancel == null) {
+      if (onDoubleTapDown == null && onDoubleTap == null && onDoubleTapCancel == null) {
         return false;
       }
     }
@@ -47,8 +42,7 @@ class CustomDoubleTapGestureRecognizer extends GestureRecognizer {
     if (_firstTap != null) {
       if (!_firstTap!.isWithinGlobalTolerance(event, kDoubleTapSlop)) {
         return;
-      } else if (!_firstTap!.hasElapsedMinTime() ||
-          !_firstTap!.hasSameButton(event)) {
+      } else if (!_firstTap!.hasElapsedMinTime() || !_firstTap!.hasSameButton(event)) {
         _reset();
         return _trackTap(event);
       } else if (onDoubleTapDown != null) {
@@ -57,8 +51,7 @@ class CustomDoubleTapGestureRecognizer extends GestureRecognizer {
           localPosition: event.localPosition,
           kind: getKindForPointer(event.pointer),
         );
-        invokeCallback<void>(
-            'onDoubleTapDown', () => onDoubleTapDown!(details));
+        invokeCallback<void>('onDoubleTapDown', () => onDoubleTapDown!(details));
       }
     }
     _trackTap(event);
@@ -210,8 +203,7 @@ class _TapTracker {
   })  : pointer = event.pointer,
         _initialGlobalPosition = event.position,
         initialButtons = event.buttons,
-        _doubleTapMinTimeCountdown =
-            _CountdownZoned(duration: doubleTapMinTime);
+        _doubleTapMinTimeCountdown = _CountdownZoned(duration: doubleTapMinTime);
 
   final DeviceGestureSettings? gestureSettings;
   final int pointer;

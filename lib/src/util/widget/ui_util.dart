@@ -48,8 +48,7 @@ class UIUtil {
 
   static void hideLoading() => _instance.hideLoading();
 
-  static void showToast(String msg,
-      {ToastType toastType = ToastType.success, String? customIcon}) {
+  static void showToast(String msg, {ToastType toastType = ToastType.success, String? customIcon}) {
     logger.i('toast', 'show toast: $msg $toastType');
     _instance.showToast(msg, toastType: toastType, customIcon: customIcon);
   }
@@ -60,11 +59,7 @@ class UIUtil {
     required BaseAppDialog alertDialog,
     Widget? customContent,
   }) {
-    _instance.showAppDialog(
-        title: title,
-        content: content,
-        alertDialog: alertDialog,
-        customContent: customContent);
+    _instance.showAppDialog(title: title, content: content, alertDialog: alertDialog, customContent: customContent);
   }
 
   static void showHalfScreenBottomSheet(
@@ -72,12 +67,10 @@ class UIUtil {
     required String tag,
     bool showCloseButton = true,
   }) {
-    _instance.showHalfScreenBottomSheet(content,
-        tag: tag, showCloseButton: showCloseButton);
+    _instance.showHalfScreenBottomSheet(content, tag: tag, showCloseButton: showCloseButton);
   }
 
-  static void showProgressLoadingDialog(
-      ValueNotifier<ProgressLoadingState> state) {
+  static void showProgressLoadingDialog(ValueNotifier<ProgressLoadingState> state) {
     _instance.showProgressLoadingDialog(state);
   }
 }

@@ -22,8 +22,7 @@ class AnimatedBlur extends StatefulWidget {
   State<AnimatedBlur> createState() => _AnimatedTransformState();
 }
 
-class _AnimatedTransformState extends State<AnimatedBlur>
-    with SingleTickerProviderStateMixin {
+class _AnimatedTransformState extends State<AnimatedBlur> with SingleTickerProviderStateMixin {
   @protected
   AnimationController get controller => _controller;
   late final AnimationController _controller;

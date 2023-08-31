@@ -27,8 +27,7 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     with TickerProviderStateMixin, _PhotoPageRouteWidgetStateMixin {
   final _tapGestureRecognizer = TapGestureRecognizer();
 
-  late final _transitionProgress =
-      AnimationController(value: 1.0, vsync: widget.navigator);
+  late final _transitionProgress = AnimationController(value: 1.0, vsync: widget.navigator);
 
   @override
   bool dragEnd(Offset velocity) {
@@ -43,8 +42,7 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     final bool animateForward;
 
     // If the user releases the page with sufficient velocity,
-    if (velocity.dy.abs() / navigator.context.size!.height >=
-        _kMinFlingVelocity) {
+    if (velocity.dy.abs() / navigator.context.size!.height >= _kMinFlingVelocity) {
       animateForward = false;
     } else {
       animateForward = _transitionProgress.value > _kCloseOpacity;
@@ -54,14 +52,11 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
       // We want to cap the animation time, but we want to use a linear curve
       // to determine it.
       final int droppedPageForwardAnimationTime = min(
-        lerpDouble(_kMaxDroppedSwipePageForwardAnimationTime, 0,
-                _transitionProgress.value)!
-            .floor(),
+        lerpDouble(_kMaxDroppedSwipePageForwardAnimationTime, 0, _transitionProgress.value)!.floor(),
         _kMaxPageBackAnimationTime,
       );
       _transitionProgress.animateTo(1.0,
-          duration: Duration(milliseconds: droppedPageForwardAnimationTime),
-          curve: animationCurve);
+          duration: Duration(milliseconds: droppedPageForwardAnimationTime), curve: animationCurve);
       return false;
     } else {
       // This route is destined to pop at this point. Reuse navigator's pop.
@@ -131,14 +126,11 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
 
   @override
   void dragUpdate(Offset offset) {
-    _transitionProgress.value =
-        (1.0 - offset.dy.abs() / _kOffset2TransitionProgressDivider)
-            .clamp(0.0, 1.0);
+    _transitionProgress.value = (1.0 - offset.dy.abs() / _kOffset2TransitionProgressDivider).clamp(0.0, 1.0);
   }
 }
 
-mixin _PhotoPageRouteWidgetStateMixin
-    on TickerProviderStateMixin<_PhotoPageRouteWidget> {
+mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRouteWidget> {
   final _doubleTapGestureRecognizer = CustomDoubleTapGestureRecognizer();
   final _scaleGestureRecognizer = ScaleGestureRecognizer();
 
@@ -149,12 +141,10 @@ mixin _PhotoPageRouteWidgetStateMixin
   Offset probablyDoubleTapPosition = Offset.zero;
 
   final ValueNotifier<Matrix4> transform = ValueNotifier(Matrix4.identity());
-  late final AnimationController _scaleAnimationController =
-      AnimationController(vsync: this);
+  late final AnimationController _scaleAnimationController = AnimationController(vsync: this);
   Animation<double>? _scaleAnimation;
 
-  late final AnimationController _positionAnimationController =
-      AnimationController(vsync: this);
+  late final AnimationController _positionAnimationController = AnimationController(vsync: this);
   Animation<Offset>? _positionAnimation;
 
   bool? verticalDrag;
@@ -202,8 +192,7 @@ mixin _PhotoPageRouteWidgetStateMixin
       if (_scaleBeforeGestureStart == 1.0 && verticalDrag != false) {
         scale = (1 - position.dy.abs() / _kOffset2ScaleDivider).clamp(0.6, 1.0);
         position = delta;
-        verticalDrag ??=
-            details.focalPointDelta.dx.abs() < details.focalPointDelta.dy.abs();
+        verticalDrag ??= details.focalPointDelta.dx.abs() < details.focalPointDelta.dy.abs();
         isScale = false;
         // drag
         dragUpdate(delta);
@@ -344,8 +333,7 @@ mixin _PhotoPageRouteWidgetStateMixin
   }
 
   void animatePosition(Offset from, Offset to) {
-    _positionAnimation = Tween<Offset>(begin: from, end: to)
-        .animate(_positionAnimationController);
+    _positionAnimation = Tween<Offset>(begin: from, end: to).animate(_positionAnimationController);
     _positionAnimationController
       ..value = 0.0
       ..fling(velocity: 0.4);

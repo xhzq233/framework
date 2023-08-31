@@ -18,8 +18,7 @@ class CustomCupertinoButton extends StatefulWidget {
   State<CustomCupertinoButton> createState() => _CustomCupertinoButtonState();
 }
 
-class _CustomCupertinoButtonState extends State<CustomCupertinoButton>
-    with SingleTickerProviderStateMixin {
+class _CustomCupertinoButtonState extends State<CustomCupertinoButton> with SingleTickerProviderStateMixin {
   static const Duration kFadeOutDuration = Duration(milliseconds: 120);
   static const Duration kFadeInDuration = Duration(milliseconds: 180);
   static const double kEndOpacity = 0.45;
@@ -38,9 +37,8 @@ class _CustomCupertinoButtonState extends State<CustomCupertinoButton>
       value: 0.0,
       vsync: this,
     );
-    _opacityAnimation = _animationController
-        .drive(CurveTween(curve: Curves.decelerate))
-        .drive(Tween(begin: 1.0, end: kEndOpacity));
+    _opacityAnimation =
+        _animationController.drive(CurveTween(curve: Curves.decelerate)).drive(Tween(begin: 1.0, end: kEndOpacity));
   }
 
   @override
@@ -55,10 +53,8 @@ class _CustomCupertinoButtonState extends State<CustomCupertinoButton>
     }
     final bool wasHeldDown = pressed;
     final TickerFuture ticker = pressed
-        ? _animationController.animateTo(1.0,
-            duration: kFadeOutDuration, curve: Curves.easeInOutCubicEmphasized)
-        : _animationController.animateTo(0.0,
-            duration: kFadeInDuration, curve: Curves.easeOutCubic);
+        ? _animationController.animateTo(1.0, duration: kFadeOutDuration, curve: Curves.easeInOutCubicEmphasized)
+        : _animationController.animateTo(0.0, duration: kFadeInDuration, curve: Curves.easeOutCubic);
     ticker.then<void>((void value) {
       if (mounted && wasHeldDown != pressed) {
         _animate();

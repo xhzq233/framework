@@ -31,9 +31,12 @@ class NavigationLink extends StatefulWidget {
   State<NavigationLink> createState() => _NavigationLinkState();
 }
 
+const _navigationLinkMoveSlot = 20;
+
 class _NavigationLinkState extends State<NavigationLink> {
   bool _isPressing = false;
   Timer? _postPressTimer;
+  Offset _offset = Offset.zero;
 
   Color get _backgroundColor => _isPressing ? _pressedColor : _unPressedColor;
 
@@ -58,12 +61,18 @@ class _NavigationLinkState extends State<NavigationLink> {
   @override
   Widget build(BuildContext context) => Listener(
         onPointerDown: (_) {
+          _offset = Offset.zero;
           _postPressTimer = Timer(
             const Duration(milliseconds: 20),
             () => _updateIsPressing(true),
           );
         },
-        onPointerMove: cancelPressing,
+        onPointerMove: (e) {
+          _offset += e.delta;
+          if (_offset.distance > _navigationLinkMoveSlot) {
+            cancelPressing(e);
+          }
+        },
         onPointerUp: cancelPressing,
         child: GestureDetector(
           onTap: widget.onPressed,

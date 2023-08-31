@@ -37,12 +37,11 @@ class TagLogger {
   }
 }
 
-typedef BELoggerErrorRecorder = void Function(dynamic exception, StackTrace? stackTrace, String reason);
+typedef BELoggerErrorRecorder = void Function(dynamic exception, StackTrace? stackTrace, String scene);
 typedef BELoggerReleaseMessageOutput = void Function(String message);
 
 class BELogger {
   static BELoggerErrorRecorder? errorRecorder;
-  static BELoggerReleaseMessageOutput? releaseMessageOutput;
 
   static void setupLogger([bool releaseLog = false]) {
     if (!releaseLog && !testReleaseLog && kDebugMode) {
@@ -65,10 +64,15 @@ class BELogger {
       Logger.level = Level.info;
       logger = TagLogger(Logger(
           filter: ProductionFilter(),
-          printer: SimplePrinter(
+          printer: _TimePrinter(PrettyPrinter(
+            methodCount: 0,
+            noBoxingByDefault: true,
+            errorMethodCount: 0,
+            lineLength: 120,
             colors: false,
-            printTime: true,
-          ),
+            printEmojis: false,
+            printTime: false,
+          )),
           output: ThirdPartyLogOutput()));
     }
   }
@@ -89,9 +93,6 @@ class ThirdPartyLogOutput extends LogOutput {
   void output(OutputEvent event) {
     if (testReleaseLog || kDebugMode) {
       _consoleOutput.output(event);
-    }
-    for (var element in event.lines) {
-      BELogger.releaseMessageOutput?.call(element);
     }
     _fileOutput?.output(event);
   }
@@ -122,6 +123,6 @@ class _TimePrinter extends LogPrinter {
   List<String> log(LogEvent event) {
     final now = DateTime.now();
     var realLogs = _realPrinter.log(event);
-    return realLogs.map((s) => '${_format.format(now)}$s').toList();
+    return realLogs.map((s) => '${_format.format(now)} $s').toList();
   }
 }

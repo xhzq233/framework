@@ -9,3 +9,4 @@ export 'src/util/widget/ui_util.dart';
 export 'src/util/widget/toast.dart';
 export 'src/util/convertor/name_convertor.dart';
 export 'src/util/convertor/time_convertor.dart';
+export 'package:collection/collection.dart';

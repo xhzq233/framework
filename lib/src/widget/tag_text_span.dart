@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-
 List<InlineSpan> tagTextSpans(
   String text, {
   TextStyle? defaultStyle,

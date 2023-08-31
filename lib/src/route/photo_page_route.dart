@@ -55,8 +55,7 @@ class PhotoPageRoute extends PageRoute<void> {
   final Widget? foreground;
 
   @override
-  Widget buildPage(
-      BuildContext context, Animation<double> animation, secondaryAnimation) {
+  Widget buildPage(BuildContext context, Animation<double> animation, secondaryAnimation) {
     return _PhotoPageRouteWidget(
       navigator: navigator!,
       realTransitionProgress: animation,

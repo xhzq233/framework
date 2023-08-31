@@ -1,11 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:boxy/boxy.dart';
-import 'package:flutter/cupertino.dart'
-    hide CupertinoContextMenu, CupertinoContextMenuAction;
+import 'package:flutter/cupertino.dart' hide CupertinoContextMenu, CupertinoContextMenuAction;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart'
-    show GestureDisposition, TapGestureRecognizer, kMinFlingVelocity;
+import 'package:flutter/gestures.dart' show GestureDisposition, TapGestureRecognizer, kMinFlingVelocity;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import '../util/widget/widget_util.dart';
@@ -19,8 +17,7 @@ const Duration _kModalPopupTransitionDuration = Duration(milliseconds: 216);
 
 const Duration _previewLongPressTimeout = Duration(milliseconds: 448);
 
-final int _animationDuration = _previewLongPressTimeout.inMilliseconds +
-    _kModalPopupTransitionDuration.inMilliseconds;
+final int _animationDuration = _previewLongPressTimeout.inMilliseconds + _kModalPopupTransitionDuration.inMilliseconds;
 
 AlignmentDirectional get kSheetAlignment => AlignmentDirectional.topCenter;
 
@@ -65,8 +62,7 @@ class CustomCupertinoContextMenu extends StatefulWidget {
 
   static const List<BoxShadow> kEndBoxShadow = _endBoxShadow;
 
-  static final double animationOpensAt =
-      _previewLongPressTimeout.inMilliseconds / _animationDuration;
+  static final double animationOpensAt = _previewLongPressTimeout.inMilliseconds / _animationDuration;
 
   final Widget child;
 
@@ -77,12 +73,10 @@ class CustomCupertinoContextMenu extends StatefulWidget {
   final BorderRadius? borderRadius;
 
   @override
-  State<CustomCupertinoContextMenu> createState() =>
-      _CustomCupertinoContextMenuState();
+  State<CustomCupertinoContextMenu> createState() => _CustomCupertinoContextMenuState();
 }
 
-class _CustomCupertinoContextMenuState extends State<CustomCupertinoContextMenu>
-    with TickerProviderStateMixin {
+class _CustomCupertinoContextMenuState extends State<CustomCupertinoContextMenu> with TickerProviderStateMixin {
   final GlobalKey _childGlobalKey = GlobalKey();
   bool _childHidden = false;
 
@@ -225,8 +219,7 @@ class _CustomCupertinoContextMenuState extends State<CustomCupertinoContextMenu>
         );
       },
     );
-    Overlay.of(context, rootOverlay: true, debugRequiredFor: widget)
-        .insert(_lastOverlayEntry!);
+    Overlay.of(context, rootOverlay: true, debugRequiredFor: widget).insert(_lastOverlayEntry!);
     _openController.forward();
   }
 
@@ -277,8 +270,7 @@ class _DecoyChild extends StatefulWidget {
   _DecoyChildState createState() => _DecoyChildState();
 }
 
-class _DecoyChildState extends State<_DecoyChild>
-    with TickerProviderStateMixin {
+class _DecoyChildState extends State<_DecoyChild> with TickerProviderStateMixin {
   late Animation<Rect?> _rect;
   late Animation<Decoration> _boxDecoration;
 
@@ -289,9 +281,9 @@ class _DecoyChildState extends State<_DecoyChild>
     const double beginPause = 1.0;
     const double openAnimationLength = 5.0;
     const double totalOpenAnimationLength = beginPause + openAnimationLength;
-    final double endPause = ((totalOpenAnimationLength * _animationDuration) /
-            _previewLongPressTimeout.inMilliseconds) -
-        totalOpenAnimationLength;
+    final double endPause =
+        ((totalOpenAnimationLength * _animationDuration) / _previewLongPressTimeout.inMilliseconds) -
+            totalOpenAnimationLength;
 
     _rect = TweenSequence<Rect?>(<TweenSequenceItem<Rect?>>[
       TweenSequenceItem<Rect?>(
@@ -397,8 +389,7 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
   static final RectTween _rectTween = RectTween();
   static final Animatable<Rect?> _rectAnimatable = _rectTween.chain(_curve);
   static final RectTween _rectTweenReverse = RectTween();
-  static final Animatable<Rect?> _rectAnimatableReverse =
-      _rectTweenReverse.chain(
+  static final Animatable<Rect?> _rectAnimatableReverse = _rectTweenReverse.chain(
     _curveReverse,
   );
   static final RectTween _sheetRectTween = RectTween();
@@ -409,12 +400,10 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
     _curveReverse,
   );
   static final Tween<double> _sheetScaleTween = Tween<double>();
-  static final Animatable<double> _sheetScaleAnimatable =
-      _sheetScaleTween.chain(
+  static final Animatable<double> _sheetScaleAnimatable = _sheetScaleTween.chain(
     _curve,
   );
-  static final Animatable<double> _sheetScaleAnimatableReverse =
-      _sheetScaleTween.chain(
+  static final Animatable<double> _sheetScaleAnimatableReverse = _sheetScaleTween.chain(
     _curveReverse,
   );
   final Tween<double> _opacityTween = Tween<double>(begin: 0.0, end: 1.0);
@@ -445,13 +434,11 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
     return offsetScaled & sizeScaled;
   }
 
-  static Rect _getSheetRectBegin(
-      Rect childRect, Rect sheetRect, EdgeInsets padding, Size screenSize) {
+  static Rect _getSheetRectBegin(Rect childRect, Rect sheetRect, EdgeInsets padding, Size screenSize) {
     /// MARK - 改动4，menu弹出位置
     final bool isBelow = _menuPositionIsBelow(childRect, padding, screenSize);
 
-    final Offset target =
-        isBelow ? childRect.bottomCenter : childRect.topCenter;
+    final Offset target = isBelow ? childRect.bottomCenter : childRect.topCenter;
     final Offset centered = target - Offset(sheetRect.width / 2, 0.0);
     return centered & sheetRect.size;
   }
@@ -469,9 +456,7 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
   void _updateTweenRects() {
     // MARK - 改动4，更改childRect到当前center
     // 第一帧进行更新
-    final Rect childRect = _scale == null
-        ? _childGlobalKey._globalRect
-        : _getScaledRect(_childGlobalKey, _scale!);
+    final Rect childRect = _scale == null ? _childGlobalKey._globalRect : _getScaledRect(_childGlobalKey, _scale!);
     _rectTween.begin = _previousChildRect;
     _rectTween.end = childRect;
 
@@ -543,26 +528,21 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
   }
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     return const SizedBox.shrink();
   }
 
   @override
-  Widget buildTransitions(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, Widget child) {
+  Widget buildTransitions(
+      BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
     // Widget res;
     if (!animation.isCompleted) {
       final bool reverse = animation.status == AnimationStatus.reverse;
-      final Rect rect = reverse
-          ? _rectAnimatableReverse.evaluate(animation)!
-          : _rectAnimatable.evaluate(animation)!;
-      final Rect sheetRect = reverse
-          ? _sheetRectAnimatableReverse.evaluate(animation)!
-          : _sheetRectAnimatable.evaluate(animation)!;
-      final double sheetScale = reverse
-          ? _sheetScaleAnimatableReverse.evaluate(animation)
-          : _sheetScaleAnimatable.evaluate(animation);
+      final Rect rect = reverse ? _rectAnimatableReverse.evaluate(animation)! : _rectAnimatable.evaluate(animation)!;
+      final Rect sheetRect =
+          reverse ? _sheetRectAnimatableReverse.evaluate(animation)! : _sheetRectAnimatable.evaluate(animation)!;
+      final double sheetScale =
+          reverse ? _sheetScaleAnimatableReverse.evaluate(animation) : _sheetScaleAnimatable.evaluate(animation);
       return Stack(
         children: <Widget>[
           Positioned.fromRect(
@@ -632,8 +612,7 @@ class _ContextMenuRouteStatic extends StatefulWidget {
   _ContextMenuRouteStaticState createState() => _ContextMenuRouteStaticState();
 }
 
-class _ContextMenuRouteStaticState extends State<_ContextMenuRouteStatic>
-    with TickerProviderStateMixin {
+class _ContextMenuRouteStaticState extends State<_ContextMenuRouteStatic> with TickerProviderStateMixin {
   static const double _kMinScale = 0.8;
 
   static const double _kSheetScaleThreshold = 0.9;
@@ -669,13 +648,11 @@ class _ContextMenuRouteStaticState extends State<_ContextMenuRouteStatic>
   void _onPanEnd(DragEndDetails details) {
     if (details.velocity.pixelsPerSecond.dy.abs() >= kMinFlingVelocity) {
       final bool flingIsAway = details.velocity.pixelsPerSecond.dy > 0;
-      final double finalPosition =
-          flingIsAway ? _moveAnimation.value.dy + 100.0 : 0.0;
+      final double finalPosition = flingIsAway ? _moveAnimation.value.dy + 100.0 : 0.0;
 
       if (flingIsAway && _sheetController.status != AnimationStatus.forward) {
         _sheetController.forward();
-      } else if (!flingIsAway &&
-          _sheetController.status != AnimationStatus.reverse) {
+      } else if (!flingIsAway && _sheetController.status != AnimationStatus.reverse) {
         _sheetController.reverse();
       }
 
@@ -727,9 +704,7 @@ class _ContextMenuRouteStaticState extends State<_ContextMenuRouteStatic>
 
   void _setDragOffset(Offset dragOffset) {
     final double endX = _kPadding * dragOffset.dx / _kDamping;
-    final double endY = dragOffset.dy >= 0.0
-        ? dragOffset.dy
-        : _kPadding * dragOffset.dy / _kDamping;
+    final double endY = dragOffset.dy >= 0.0 ? dragOffset.dy : _kPadding * dragOffset.dy / _kDamping;
     setState(() {
       _dragOffset = dragOffset;
       _moveAnimation = Tween<Offset>(
@@ -789,8 +764,7 @@ class _ContextMenuRouteStaticState extends State<_ContextMenuRouteStatic>
   }
 
   Widget _buildChildAnimation(BuildContext context, Widget? child) {
-    _lastScale =
-        _getScale(MediaQuery.sizeOf(context).height, _moveAnimation.value.dy);
+    _lastScale = _getScale(MediaQuery.sizeOf(context).height, _moveAnimation.value.dy);
     return Transform.scale(
       key: widget.childGlobalKey,
       scale: _lastScale,
