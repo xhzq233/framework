@@ -5,6 +5,15 @@ import 'package:framework/cupertino.dart';
 import 'package:framework/layout.dart';
 import 'package:framework/util.dart';
 
+void main() {
+  runApp(
+    WidgetsApp(
+      color: Colors.red,
+      home: const ContextMenuPage(),
+    ),
+  );
+}
+
 class ContextMenuPage extends StatelessWidget {
   const ContextMenuPage({Key? key}) : super(key: key);
 
