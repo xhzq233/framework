@@ -3,10 +3,6 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-const _pressedColor = CupertinoColors.systemGrey5;
-
-const _unPressedColor = Colors.transparent;
-
 class NavigationLink extends StatefulWidget {
   final VoidCallback? onPressed;
 
@@ -17,6 +13,8 @@ class NavigationLink extends StatefulWidget {
   final EdgeInsets padding;
 
   final Widget child;
+  final Color pressedColor;
+  final Color unPressedColor;
 
   const NavigationLink({
     super.key,
@@ -25,6 +23,8 @@ class NavigationLink extends StatefulWidget {
     this.onLongPressed,
     this.borderRadius,
     this.padding = const EdgeInsets.only(left: 10, right: 16),
+    this.pressedColor = CupertinoColors.systemGrey5,
+    this.unPressedColor = Colors.transparent,
   });
 
   @override
@@ -37,8 +37,6 @@ class _NavigationLinkState extends State<NavigationLink> {
   bool _isPressing = false;
   Timer? _postPressTimer;
   Offset _offset = Offset.zero;
-
-  Color get _backgroundColor => _isPressing ? _pressedColor : _unPressedColor;
 
   void _updateIsPressing(bool isPressing) {
     if (!mounted) {
@@ -80,7 +78,7 @@ class _NavigationLinkState extends State<NavigationLink> {
           child: Container(
             padding: widget.padding,
             decoration: BoxDecoration(
-              color: _backgroundColor,
+              color: _isPressing ? widget.pressedColor : widget.unPressedColor,
               borderRadius: widget.borderRadius,
             ),
             child: widget.child,

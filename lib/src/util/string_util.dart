@@ -16,11 +16,3 @@ extension MoneyStringExt on double {
     return str;
   }
 }
-
-extension MsgUidExt on String {
-  String get welcomeMsg => '$this-welcomeMsg';
-
-  String get artistPromptMsg => '$this-prompt';
-
-  String get artistGuideMsg => '$this-show_artist_guide_msg';
-}

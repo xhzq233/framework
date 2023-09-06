@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/cupertino.dart';
 import '../../logger/logger.dart';
 import 'app_dialog.dart';
 import 'toast.dart';
@@ -72,6 +72,21 @@ class UIUtil {
 
   static void showProgressLoadingDialog(ValueNotifier<ProgressLoadingState> state) {
     _instance.showProgressLoadingDialog(state);
+  }
+
+  static String getDynamicPath(String imagePath, bool isDarkModeAware, BuildContext context) {
+    final isDarkMode = isDarkModeAware && CupertinoTheme.brightnessOf(context) == Brightness.dark;
+    String darkModePath = '';
+    if (isDarkMode) {
+      final list = imagePath.split('/');
+      String pathLast = 'dark_mode/${list.last}';
+      list.removeLast();
+      for (var element in list) {
+        darkModePath += '$element/';
+      }
+      darkModePath += pathLast;
+    }
+    return isDarkMode ? darkModePath : imagePath;
   }
 }
 
