@@ -58,7 +58,7 @@ class KeyboardInputFieldState with InputFieldState {
 class TodoInputFieldViewModel with Disposable, InputFieldViewModelMixin {
   TodoInputFieldViewModel(this.api);
 
-  final BaseListViewModel api;
+  final BaseListViewModel<dynamic, dynamic> api;
 
   @override
   late InputFieldState state = KeyboardInputFieldState(controller: _textEditingController);

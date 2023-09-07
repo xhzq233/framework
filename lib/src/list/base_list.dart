@@ -70,6 +70,8 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
     this.topSliver,
     this.bottomSliver,
     this.controller,
+    this.primary = true,
+    this.physics,
   });
 
   final ItemBuilder<ItemType> itemBuilder;
@@ -78,6 +80,8 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
   final ScrollController? controller;
   final bool reverse;
   final ViewModel viewModel;
+  final bool primary;
+  final ScrollPhysics? physics;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +93,8 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
     return CustomScrollView(
       controller: controller,
       reverse: reverse,
+      physics: physics,
+      primary: primary,
       slivers: [
         if (first != null) first,
         SliverList.builder(
