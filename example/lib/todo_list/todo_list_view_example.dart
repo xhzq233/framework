@@ -6,15 +6,15 @@ import 'package:provider/provider.dart';
 import 'todo_list_input_field.dart';
 import 'todo_model.dart';
 
-class TodoListPageViewModel with Disposable, BaseListViewModel<Todo, String, String> {
+class TodoListPageViewModel with Disposable, BaseListViewModel<Todo, String> {
   final List<Todo> _list = [
-    Todo(content: '111'),
-    Todo(content: '112'),
-    Todo(content: '113'),
-    Todo(content: '114'),
-    Todo(content: '115'),
-    Todo(content: '1145'),
-    Todo(content: '11451'),
+    const Todo(content: '111'),
+    const Todo(content: '112'),
+    const Todo(content: '113'),
+    const Todo(content: '114'),
+    const Todo(content: '115'),
+    const Todo(content: '1145'),
+    const Todo(content: '11451'),
   ];
 
   @override
@@ -81,7 +81,7 @@ class TodoListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BaseList<TodoListPageViewModel, Todo, String, String>(
+    return BaseList<TodoListPageViewModel, Todo, String>(
       itemBuilder: TodoWidget.itemBuilder,
       viewModel: context.read<TodoListPageViewModel>(),
       bottomSliver: SliverToBoxAdapter(

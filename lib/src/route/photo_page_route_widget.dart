@@ -79,6 +79,7 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
 
   @override
   Widget build(BuildContext context) {
+    _size = View.of(context).screenSize;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -255,7 +256,7 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
     );
   }
 
-  late final Size _size;
+  late Size _size;
 
   (double, double) cornersY({double? scale}) {
     final double scale0 = scale ?? this.scale;
@@ -370,7 +371,5 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
       ..onStart = _onScaleStart
       ..onUpdate = _onScaleUpdate
       ..onEnd = _onScaleEnd;
-
-    _size = View.of(context).screenSize;
   }
 }

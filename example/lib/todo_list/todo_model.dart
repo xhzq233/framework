@@ -1,9 +1,8 @@
 import 'package:framework/list.dart';
 
-class Todo extends BaseItemModel<String, String> {
-  Todo({required this.content, this.done = false});
+class Todo extends BaseItemModel<String> {
+  const Todo({required this.content, this.done = false});
 
-  @override
   final String content;
 
   final bool done;
