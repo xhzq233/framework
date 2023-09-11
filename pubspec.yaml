@@ -1,7 +1,6 @@
 name: framework
 description: A new Flutter package project.
 version: 0.0.1
-homepage:
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -17,7 +16,6 @@ dependencies:
   intl: any
   collection: any
   equatable: ^2.0.5
-  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:

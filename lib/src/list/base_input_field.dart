@@ -3,34 +3,49 @@ import 'package:flutter/widgets.dart';
 import '../base/disposable.dart';
 import '../layout/after_layout.dart';
 
-abstract mixin class InputFieldState {
+/// [dispose] method is called when the [InputFieldState] changed to another.
+abstract mixin class InputFieldState implements DisposeMixin {
   /// Return and clear current input.
-  String? submit();
-
-  /// Build the InputField with a [submit] method.
-  Widget build(BuildContext context, VoidCallback submit);
-
-  /// Called when the [InputFieldState] changed to another.
-  void dispose() {}
+  String? submit() => null;
 }
 
 typedef InputFieldDecorationBuilder = Widget Function(Widget child);
-typedef _InputHeightPublisher = ValueNotifier<double>;
+typedef InputHeightPublisher = ValueNotifier<double>;
 
-mixin InputFieldViewModelMixin on Disposable {
-  InputFieldState get state;
+/// Publishes the current [state].
+/// Bind [state] with the corresponding input widget and publish the height of it.
+///
+/// Must implement [submit] and [initState] method.
+mixin InputFieldViewModelMixin on ChangeNotifier {
+  InputFieldState get state => _state;
 
-  final _InputHeightPublisher _inputHeightPublisher = _InputHeightPublisher(0);
+  @protected
+  @mustCallSuper
+  set state(InputFieldState val) {
+    if (state == val) return;
+    _state.dispose();
+    _state = val;
+    notifyListeners();
+  }
+
+  late InputFieldState _state = initState();
+
+  late final InputHeightPublisher inputHeightPublisher = InputHeightPublisher(0);
 
   late final Widget inputHeightBox = ValueListenableBuilder(
-    valueListenable: _inputHeightPublisher,
+    valueListenable: inputHeightPublisher,
     builder: (ctx, val, _) => SizedBox(height: val),
   );
 
-  /// Submit the given [input]
+  /// Initialize the [state]
+  InputFieldState initState();
+
+  /// Submit with the given [input]
+  @protected
   void submit(String input);
 
-  void _submit() {
+  /// Submit the current input.
+  void submitUI() {
     final input = state.submit();
     if (input == null) return;
     submit(input);
@@ -41,31 +56,22 @@ mixin InputFieldViewModelMixin on Disposable {
   /// Specify the input decoration using [decorationBuilder].
   ///
   /// Write [build] method inside ViewModel is to easily bind viewModel and corresponding widget.
-  Widget build({InputFieldDecorationBuilder? decorationBuilder}) {
-    final Widget input = Builder(builder: (context) => state.build(context, _submit));
-    final Widget res;
-
-    if (decorationBuilder != null) {
-      res = decorationBuilder(input);
-    } else {
-      res = input;
-    }
-    return _InputFieldScope(res, _inputHeightPublisher);
-  }
+  @mustCallSuper
+  Widget buildWith({Key? key, Widget? child}) => _InputFieldScope(child, inputHeightPublisher, key: key);
 
   @override
-  void dispose(BuildContext context) {
-    super.dispose(context);
-    _inputHeightPublisher.dispose();
+  void dispose() {
+    super.dispose();
+    inputHeightPublisher.dispose();
   }
 }
 
 class _InputFieldScope extends StatelessWidget {
-  const _InputFieldScope(this.child, this.publisher);
+  const _InputFieldScope(this.child, this.publisher, {super.key});
 
-  final Widget child;
+  final Widget? child;
 
-  final _InputHeightPublisher publisher;
+  final InputHeightPublisher publisher;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +84,21 @@ class _InputFieldScope extends StatelessWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+/// The small horizontal bar at the bottom of iPhone and iPad is called `Home Indicator`
+class HomeIndicatorPadding extends StatelessWidget {
+  const HomeIndicatorPadding({super.key, this.child});
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+      child: child,
     );
   }
 }

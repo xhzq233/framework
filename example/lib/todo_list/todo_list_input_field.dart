@@ -4,10 +4,10 @@ import 'package:framework/list.dart';
 
 import 'todo_model.dart';
 
-class KeyboardInputFieldState with InputFieldState {
+class KeyboardInputFieldState extends ChangeNotifier with InputFieldState {
   KeyboardInputFieldState({this.controller, this.focusNode}) {
     if (controller != null) {
-      controller!.addListener(_updateBtn);
+      controller!.addListener(notifyListeners);
     }
   }
 
@@ -15,31 +15,7 @@ class KeyboardInputFieldState with InputFieldState {
 
   final FocusNode? focusNode;
 
-  final addBtnEnabled = ValueNotifier(false);
-
-  void _updateBtn() {
-    addBtnEnabled.value = controller?.text.trim().isNotEmpty ?? false;
-  }
-
-  @override
-  Widget build(BuildContext context, VoidCallback submit) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          suffix: ValueListenableBuilder(
-            valueListenable: addBtnEnabled,
-            builder: (context, bool value, _) => ElevatedButton(
-              onPressed: value ? submit : null,
-              child: const Text('Add'),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  bool get submitEnabled => controller?.text.trim().isNotEmpty ?? false;
 
   @override
   String? submit() {
@@ -51,28 +27,49 @@ class KeyboardInputFieldState with InputFieldState {
   @override
   void dispose() {
     super.dispose();
-    controller?.removeListener(_updateBtn);
+    controller?.removeListener(notifyListeners);
   }
 }
 
-class TodoInputFieldViewModel with Disposable, InputFieldViewModelMixin {
+class LockInputFieldState with InputFieldState {
+  LockInputFieldState(this.text);
+
+  final String? text;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+  }
+}
+
+class TodoInputFieldViewModel extends ChangeNotifier with DisposeMixin, InputFieldViewModelMixin {
   TodoInputFieldViewModel(this.api);
 
   final BaseListViewModel<dynamic, dynamic> api;
 
-  @override
-  late InputFieldState state = KeyboardInputFieldState(controller: _textEditingController);
-
   final TextEditingController _textEditingController = TextEditingController();
 
   @override
-  void dispose(BuildContext context) {
-    super.dispose(context);
+  void dispose() {
+    super.dispose();
     _textEditingController.dispose();
   }
 
   @override
   void submit(String input) {
     api.add(Todo(content: input));
+  }
+
+  @override
+  InputFieldState initState() {
+    return KeyboardInputFieldState(controller: _textEditingController);
+  }
+
+  void lock() {
+    state = LockInputFieldState(_textEditingController.text);
+  }
+
+  void unlock() {
+    state = KeyboardInputFieldState(controller: _textEditingController);
   }
 }
