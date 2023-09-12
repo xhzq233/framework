@@ -127,7 +127,7 @@ class _InputFieldBody extends StatelessWidget {
             listenable: state,
             builder: (BuildContext context, Widget? child) {
               return ElevatedButton(
-                onPressed: state.submitEnabled ? inputFieldVM.submitUI : null,
+                onPressed: state.submitEnabled ? state.finalizeEditing : null,
                 child: const Text('Add'),
               );
             },

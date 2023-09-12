@@ -4,7 +4,7 @@ import 'package:framework/list.dart';
 
 import 'todo_model.dart';
 
-class KeyboardInputFieldState extends ChangeNotifier with InputFieldState {
+class KeyboardInputFieldState extends ChangeNotifier with InputState {
   KeyboardInputFieldState({this.controller, this.focusNode}) {
     if (controller != null) {
       controller!.addListener(notifyListeners);
@@ -31,7 +31,7 @@ class KeyboardInputFieldState extends ChangeNotifier with InputFieldState {
   }
 }
 
-class LockInputFieldState with InputFieldState {
+class LockInputFieldState with InputState {
   LockInputFieldState(this.text);
 
   final String? text;
@@ -42,7 +42,7 @@ class LockInputFieldState with InputFieldState {
   }
 }
 
-class TodoInputFieldViewModel extends ChangeNotifier with DisposeMixin, InputFieldViewModelMixin {
+class TodoInputFieldViewModel extends ChangeNotifier with DisposeMixin, InputViewModelMixin {
   TodoInputFieldViewModel(this.api);
 
   final BaseListViewModel<dynamic, dynamic> api;
@@ -61,7 +61,7 @@ class TodoInputFieldViewModel extends ChangeNotifier with DisposeMixin, InputFie
   }
 
   @override
-  InputFieldState initState() {
+  InputState initState() {
     return KeyboardInputFieldState(controller: _textEditingController);
   }
 

@@ -1,34 +1,49 @@
-import 'package:flutter/widgets.dart';
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
 
 import '../base/disposable.dart';
 import '../layout/after_layout.dart';
+import 'dart:async';
 
-/// [dispose] method is called when the [InputFieldState] changed to another.
-abstract mixin class InputFieldState implements DisposeMixin {
+part '_vx_input_layout.dart';
+
+typedef InputHeightPublisher = ValueNotifier<double>;
+
+abstract mixin class InputState implements DisposeMixin {
+  covariant late final InputViewModelMixin viewModel;
+
   /// Return and clear current input.
   String? submit() => null;
-}
 
-typedef InputFieldDecorationBuilder = Widget Function(Widget child);
-typedef InputHeightPublisher = ValueNotifier<double>;
+  /// Submit the current input.
+  ///
+  /// Pass it to UI. e.g. [TextField].
+  void finalizeEditing() {
+    final input = submit();
+    if (input == null) return;
+    viewModel.submit(input);
+  }
+}
 
 /// Publishes the current [state].
 /// Bind [state] with the corresponding input widget and publish the height of it.
 ///
 /// Must implement [submit] and [initState] method.
-mixin InputFieldViewModelMixin on ChangeNotifier {
-  InputFieldState get state => _state;
+mixin InputViewModelMixin on ChangeNotifier {
+  InputState get state => _state;
 
   @protected
   @mustCallSuper
-  set state(InputFieldState val) {
-    if (state == val) return;
+  set state(InputState val) {
+    if (state.runtimeType == val.runtimeType) return;
     _state.dispose();
     _state = val;
+    _state.viewModel = this;
     notifyListeners();
   }
 
-  late InputFieldState _state = initState();
+  late InputState _state = initState()..viewModel = this;
 
   late final InputHeightPublisher inputHeightPublisher = InputHeightPublisher(0);
 
@@ -38,18 +53,11 @@ mixin InputFieldViewModelMixin on ChangeNotifier {
   );
 
   /// Initialize the [state]
-  InputFieldState initState();
+  InputState initState();
 
-  /// Submit with the given [input]
+  /// Submit with the given [input].
   @protected
   void submit(String input);
-
-  /// Submit the current input.
-  void submitUI() {
-    final input = state.submit();
-    if (input == null) return;
-    submit(input);
-  }
 
   /// Build the InputField.
   ///
@@ -75,13 +83,15 @@ class _InputFieldScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: AfterLayout(
-        callback: (val) => publisher.value = val.size.height,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-          child: child,
+    return TextFieldTapRegion(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: AfterLayout(
+          callback: (val) => publisher.value = val.size.height,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+            child: child,
+          ),
         ),
       ),
     );
@@ -99,6 +109,27 @@ class HomeIndicatorPadding extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
       child: child,
+    );
+  }
+}
+
+class BlurredInputField extends StatelessWidget {
+  const BlurredInputField({super.key, this.child, required this.maskColor});
+
+  final Widget? child;
+
+  final Color maskColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: ColoredBox(
+          color: maskColor,
+          child: child,
+        ),
+      ),
     );
   }
 }
