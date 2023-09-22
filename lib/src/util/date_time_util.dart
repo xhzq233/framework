@@ -5,6 +5,8 @@ extension DateTimeExt on DateTime {
 
   int get secondsSinceEpoch => millisecondsSinceEpoch ~/ 1000;
 
+  int get daysSinceEpoch => millisecondsSinceEpoch ~/ (1000 * 3600 * 24);
+
   bool isSameDayAs(DateTime other) {
     return year == other.year && month == other.month && day == other.day;
   }

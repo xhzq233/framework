@@ -104,3 +104,9 @@ mixin ProgressLoadingState {
   /// null if [finish] is true or have [error], 0.0 ~ 1.0
   double? get loadingProgress;
 }
+
+extension RebuildOnElement on BuildContext? {
+  void rebuild() {
+    if (this != null && this!.mounted) (this as Element).markNeedsBuild();
+  }
+}

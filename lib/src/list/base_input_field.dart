@@ -124,7 +124,7 @@ class BlurredInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
         child: ColoredBox(
           color: maskColor,
           child: child,

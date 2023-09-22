@@ -1,5 +1,7 @@
-import 'package:flutter/widgets.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
+
+import '../util/widget/ui_util.dart';
 
 @immutable
 abstract class BaseItemModel<Key> with EquatableMixin {
@@ -15,14 +17,14 @@ abstract class BaseItemModel<Key> with EquatableMixin {
 }
 
 /// Notify others only if the [list] changed.
-mixin BaseListViewModel<ItemType extends BaseItemModel<Key>, Key> {
+abstract mixin class BaseListViewModel<ItemType extends BaseItemModel<Key>, Key> {
   @protected
   BuildContext? _listContext;
 
   @mustCallSuper
   @protected
   void notifyList() {
-    if (_listContext != null && _listContext!.mounted) (_listContext as Element).markNeedsBuild();
+    _listContext.rebuild();
   }
 
   /// Provides all items.
@@ -50,6 +52,13 @@ mixin BaseListViewModel<ItemType extends BaseItemModel<Key>, Key> {
     }
   }
 
+  /// replace all list items with list
+  void replaceList(List<ItemType> newList) {
+    list.clear();
+    list.addAll(newList);
+    notifyList();
+  }
+
   /// Deletes the `item` with the given id.
   ///
   /// If no `item` with the given id exists, a error is thrown.
@@ -72,7 +81,14 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
     this.controller,
     this.primary = true,
     this.physics,
+    this.buildList = _defaultBuildList,
+    this.scrollDirection = Axis.vertical,
+    this.scrollBehavior,
+    this.shrinkWrap = false,
+    this.scrollViewWrapper,
   });
+
+  static Widget _defaultBuildList(SliverChildDelegate delegate) => SliverList(delegate: delegate);
 
   final ItemBuilder<ItemType> itemBuilder;
   final Widget? topSliver;
@@ -82,6 +98,11 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
   final ViewModel viewModel;
   final bool primary;
   final ScrollPhysics? physics;
+  final Axis scrollDirection;
+  final bool shrinkWrap;
+  final ScrollBehavior? scrollBehavior;
+  final Widget Function(SliverChildDelegate delegate) buildList;
+  final Widget Function(CustomScrollView scrollView)? scrollViewWrapper;
 
   @override
   Widget build(BuildContext context) {
@@ -90,25 +111,31 @@ class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType exte
     final first = reverse ? bottomSliver : topSliver;
     final last = reverse ? topSliver : bottomSliver;
 
-    return CustomScrollView(
+    final delegate = SliverChildBuilderDelegate(
+      (ctx, index) {
+        if (reverse) {
+          index = list.length - index - 1;
+        }
+        final ItemType item = list[index];
+        return KeyedSubtree(key: ValueKey(item.key), child: itemBuilder(item, index));
+      },
+      childCount: list.length,
+    );
+
+    final scrollView = CustomScrollView(
       controller: controller,
       reverse: reverse,
       physics: physics,
       primary: primary,
+      scrollDirection: scrollDirection,
+      scrollBehavior: scrollBehavior,
+      shrinkWrap: shrinkWrap,
       slivers: [
         if (first != null) first,
-        SliverList.builder(
-          itemBuilder: (ctx, index) {
-            if (reverse) {
-              index = list.length - index - 1;
-            }
-            final ItemType item = list[index];
-            return KeyedSubtree(key: ValueKey(item.key), child: itemBuilder(item, index));
-          },
-          itemCount: list.length,
-        ),
+        buildList(delegate),
         if (last != null) last,
       ],
     );
+    return scrollViewWrapper?.call(scrollView) ?? scrollView;
   }
 }
