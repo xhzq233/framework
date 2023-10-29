@@ -26,10 +26,10 @@ abstract mixin class InputState implements DisposeMixin {
   }
 }
 
+final class NoneInputState with DisposeMixin, InputState {}
+
 /// Publishes the current [state].
 /// Bind [state] with the corresponding input widget and publish the height of it.
-///
-/// Must implement [submit] and [initState] method.
 mixin InputViewModelMixin on ChangeNotifier {
   InputState get state => _state;
 
@@ -53,11 +53,11 @@ mixin InputViewModelMixin on ChangeNotifier {
   );
 
   /// Initialize the [state]
-  InputState initState();
+  InputState initState() => NoneInputState();
 
   /// Submit with the given [input].
   @protected
-  void submit(String input);
+  void submit(String input) {}
 
   /// Build the InputField.
   ///

@@ -13,7 +13,7 @@ class NavigationLink extends StatefulWidget {
   final EdgeInsets padding;
 
   final Widget child;
-  final Color pressedColor;
+  final CupertinoDynamicColor pressedColor;
   final Color unPressedColor;
 
   const NavigationLink({
@@ -78,7 +78,7 @@ class _NavigationLinkState extends State<NavigationLink> {
           child: Container(
             padding: widget.padding,
             decoration: BoxDecoration(
-              color: _isPressing ? widget.pressedColor : widget.unPressedColor,
+              color: _isPressing ? widget.pressedColor.resolveFrom(context) : widget.unPressedColor,
               borderRadius: widget.borderRadius,
             ),
             child: widget.child,
