@@ -493,7 +493,7 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
   }
 
   @override
-  bool didPop(T? result) {
+  bool didPop(T? result, {bool animation = true}) {
     _updateTweenRects();
     return super.didPop(result);
   }

@@ -7,3 +7,4 @@ export 'src/widget/swiper.dart';
 export 'src/widget/disappear.dart';
 export 'src/widget/custom_pinned_app_bar.dart';
 export 'src/widget/prelaunch.dart';
+export 'src/widget/barless_scaffold.dart';

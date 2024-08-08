@@ -4,9 +4,12 @@ import 'package:flutter/widgets.dart';
 import '../util/widget/ui_util.dart';
 
 @immutable
-abstract class BaseItemModel<Key> with EquatableMixin {
+abstract class BaseItemModel<Key> with EquatableMixin, BaseItemModelMixin<Key> {
   const BaseItemModel();
+}
 
+@immutable
+mixin BaseItemModelMixin<Key> on EquatableMixin {
   Key get key;
 
   @override
@@ -17,7 +20,7 @@ abstract class BaseItemModel<Key> with EquatableMixin {
 }
 
 /// Notify others only if the [list] changed.
-abstract mixin class BaseListViewModel<ItemType extends BaseItemModel<Key>, Key> {
+abstract mixin class BaseListViewModel<ItemType extends BaseItemModelMixin<Key>, Key> {
   @protected
   BuildContext? _listContext;
 
@@ -69,7 +72,7 @@ abstract mixin class BaseListViewModel<ItemType extends BaseItemModel<Key>, Key>
 
 typedef ItemBuilder<Model> = Widget Function(Model messageModel, int index);
 
-class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType extends BaseItemModel<Key>, Key>
+class BaseList<ViewModel extends BaseListViewModel<ItemType, Key>, ItemType extends BaseItemModelMixin<Key>, Key>
     extends StatelessWidget {
   const BaseList({
     super.key,

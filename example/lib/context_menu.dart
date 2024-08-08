@@ -7,9 +7,9 @@ import 'package:framework/util.dart';
 
 void main() {
   runApp(
-    WidgetsApp(
+    const CupertinoApp(
       color: Colors.red,
-      home: const ContextMenuPage(),
+      home: ContextMenuPage(),
     ),
   );
 }
