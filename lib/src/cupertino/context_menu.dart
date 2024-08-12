@@ -229,6 +229,11 @@ class _CustomCupertinoContextMenuState extends State<CustomCupertinoContextMenu>
       cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
       child: Listener(
         onPointerDown: _tapGestureRecognizer.addPointer,
+        onPointerUp: (PointerUpEvent event) {
+          if (_openController.value < _midpoint) {
+            _tapGestureRecognizer.resolve(GestureDisposition.rejected);
+          }
+        },
         child: TickerMode(
           enabled: !_childHidden,
           child: Visibility.maintain(
