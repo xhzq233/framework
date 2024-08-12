@@ -55,6 +55,7 @@ class PhotoPageRoute extends PageRoute<void> {
   final Widget? foreground;
 
   @override
+  @protected
   Widget buildPage(BuildContext context, Animation<double> animation, secondaryAnimation) {
     return _PhotoPageRouteWidget(
       navigator: navigator!,
