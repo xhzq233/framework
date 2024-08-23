@@ -5,3 +5,4 @@ export 'src/base/device.dart';
 export 'src/base/paging_action.dart';
 export 'src/base/router_observer.dart';
 export 'src/base/disposable.dart';
+export 'src/base/catcher.dart';
