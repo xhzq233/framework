@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import 'package:boxy/boxy.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:framework/cupertino.dart';
-import 'package:framework/layout.dart';
-import 'package:framework/util.dart';
 
 void main() {
+  debugPrintGestureArenaDiagnostics = true;
   runApp(
     const CupertinoApp(
       color: Colors.red,
@@ -39,30 +38,21 @@ class ContextMenuPage extends StatelessWidget {
     final scrollView = SingleChildScrollView(
       child: Column(
         children: [
-          SizedBox(
-            height: 20,
-            width: 50,
-            child: CustomBoxy(
-                delegate: AutoFittedBoxyDelegate(
-                  originalSize: const Size(100, 100),
-                  scaleLowerLimit: 0.2,
-                ),
-                children: [
-                  CustomCupertinoButton(
-                      child: Container(
-                        color: Colors.red,
-                        width: 100,
-                        height: 100,
-                      ),
-                      onTap: () {
-                        // success!
-                        // logger.d('测试hitTest success!');
-                      }),
-                ]),
-          ).border(),
-          padding,
           Row(
-            children: [padding, CustomCupertinoContextMenu(actions: actions, child: overflow('Custom')), spacer],
+            children: [
+              spacer,
+              GestureDetector(
+                onTap: () => print('outside'),
+                child: CustomCupertinoContextMenu(
+                  actions: actions,
+                  child: GestureDetector(
+                    onTap: () => print('inside'),
+                    child: overflow('Custom'),
+                  ),
+                ),
+              ),
+              spacer
+            ],
           ),
           padding,
           Row(

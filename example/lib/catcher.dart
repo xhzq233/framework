@@ -33,7 +33,8 @@ class _App extends StatelessWidget {
 class _CatcherImpl with Catcher {
   @override
   void handleException(String name, String reason, String stackTrace) {
-    print('name: $name, reason: $reason, stackTrace: $stackTrace');
+    final List<String> stackTrace_ = stackTrace.split('\n');
+    print('stackTrace: $stackTrace_');
   }
 
   @override
