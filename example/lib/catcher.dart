@@ -32,14 +32,18 @@ class _App extends StatelessWidget {
 
 class _CatcherImpl with Catcher {
   @override
-  void handleException(String name, String reason, String stackTrace) {
-    final List<String> stackTrace_ = stackTrace.split('\n');
-    print('stackTrace: $stackTrace_');
+  void handleException(String name, String reason, StackTrace stackTrace) {
+    print('stackTrace: $stackTrace');
   }
 
   @override
   void main() {
     runApp(const _App());
+  }
+
+  @override
+  void handleFlutterError(FlutterErrorDetails errorDetails) {
+    FlutterError.presentError(errorDetails);
   }
 }
 

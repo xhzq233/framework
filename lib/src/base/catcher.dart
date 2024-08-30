@@ -19,21 +19,9 @@ abstract mixin class Catcher {
         error: exception is FlutterError ? exception : null,
       );
     };
-    FlutterError.onError = (FlutterErrorDetails details) {
-      // Default error handling
-      FlutterError.presentError(details);
-      delegate.handleException(
-        'Uncaught Flutter error',
-        details.exception.toString(),
-        (details.stack ?? StackTrace.current).toString(),
-      );
-    };
+    FlutterError.onError = delegate.handleFlutterError;
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-      delegate.handleException(
-        'Uncaught platform error',
-        error.toString(),
-        stack.toString(),
-      );
+      delegate.handleException('Uncaught platform error', error.toString(), stack);
       return true;
     };
 
@@ -41,11 +29,7 @@ abstract mixin class Catcher {
     runZonedGuarded(
       delegate.main,
       (Object error, StackTrace stack) {
-        delegate.handleException(
-          'Uncaught zone error',
-          error.toString(),
-          stack.toString(),
-        );
+        delegate.handleException('Uncaught zone error', error.toString(), stack);
       },
     );
 
@@ -53,16 +37,20 @@ abstract mixin class Catcher {
     _recvPort = RawReceivePort((List<dynamic> errorAndStack) {
       final String error = errorAndStack[0];
       final String? stack = errorAndStack[1];
-      delegate.handleException(
-        'Uncaught isolate error',
-        error.toString(),
-        stack ?? StackTrace.empty.toString(),
-      );
+      final StackTrace stackTrace;
+      if (stack != null) {
+        stackTrace = StackTrace.fromString(stack);
+      } else {
+        stackTrace = StackTrace.empty;
+      }
+      delegate.handleException('Uncaught isolate error', error.toString(), stackTrace);
     });
     Isolate.current.addErrorListener(_recvPort.sendPort);
   }
 
-  void handleException(String name, String reason, String stackTrace);
+  void handleException(String name, String reason, StackTrace stackTrace);
+
+  void handleFlutterError(FlutterErrorDetails errorDetails);
 
   FutureOr<void> main();
 }
