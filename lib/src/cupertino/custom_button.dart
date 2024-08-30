@@ -19,7 +19,7 @@ abstract class PressAnimatable<T extends StatefulWidget> extends State<T> with S
     super.initState();
     animationController = AnimationController(duration: const Duration(milliseconds: 200), value: 0.0, vsync: this);
     _tapGestureRecognizer = TapGestureRecognizer()
-      ..onTap = onPressed
+      ..onTap = _onTap
       ..onTapDown = _onTapDown
       ..onTapUp = _onTapUp
       ..onTapCancel = _onTapCancel;
@@ -30,6 +30,10 @@ abstract class PressAnimatable<T extends StatefulWidget> extends State<T> with S
     animationController.dispose();
     _tapGestureRecognizer.dispose();
     super.dispose();
+  }
+
+  void _onTap() {
+    onPressed?.call();
   }
 
   void _onTapDown(TapDownDetails details) {
