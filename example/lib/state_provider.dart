@@ -4,19 +4,27 @@
 import 'package:flutter/material.dart';
 import 'package:framework/base.dart';
 
-class _Home1DataProvider extends StatefulWidget {
-  const _Home1DataProvider({required this.child});
-
-  final Widget child;
+class _Home1DataProvider extends Provider {
+  _Home1DataProvider() {
+    print('Home1DataProvider created');
+  }
 
   @override
-  State<_Home1DataProvider> createState() => _Home1DataProviderState();
+  void dispose() {
+    print('Home1DataProvider disposed');
+    super.dispose();
+  }
 }
 
-class _Home1DataProviderState extends StateProvider<_Home1DataProvider> {
+class _Home2DataProvider extends Provider {
+  _Home2DataProvider() {
+    print('Home2DataProvider created');
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return ProviderWidget(provider: this, child: widget.child);
+  void dispose() {
+    print('Home2DataProvider disposed');
+    super.dispose();
   }
 }
 
@@ -25,24 +33,27 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.read<_Home1DataProviderState>(context);
-    return GestureDetector(
+    return ProviderWidget(
+      provider: (_) => _Home1DataProvider(),
+      child: GestureDetector(
         onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const _Home1DataProvider(child: Home())));
+          (context as Element).markNeedsBuild();
         },
         child: const ColoredBox(
           color: Colors.blue,
           child: Center(
             child: Text('Home'),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
 
 void main() {
   runApp(
     const MaterialApp(
-      home: _Home1DataProvider(child: _Home1DataProvider(child: Home())),
+      home: Home(),
     ),
   );
 }
