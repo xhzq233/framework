@@ -1,6 +1,7 @@
 /// framework - state_provider
 /// Created by xhz on 8/27/24
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Provider 类似于 ViewModel，用于绑定数据和 UI，永远使提供的数据保持最新
@@ -35,43 +36,47 @@ abstract class Provider with ChangeNotifier {
     final _ProviderElement<T>? providerElement =
         context.getElementForInheritedWidgetOfExactType<ProviderWidget<T>>() as _ProviderElement<T>?;
     if (providerElement == null) {
-      throw FlutterError('Provider.read/watch() called with a context that does not contain a Provider<$T>.');
+      throw FlutterError('Provider.read/watch() called with a context that does not contain a Provider<$T>.'
+          'No Provider<$T> found on context: $context ');
     }
-    if (providerElement._providerInstance == null) {
-      // lazy init provider
-      providerElement._initProvider();
-    }
-    return providerElement._providerInstance!;
+    return providerElement.providerInstance;
   }
 
   static T? maybeRead<T extends Listenable>(BuildContext context) {
     final _ProviderElement<T>? providerElement =
         context.getElementForInheritedWidgetOfExactType<ProviderWidget<T>>() as _ProviderElement<T>?;
-    if (providerElement == null) {
-      return null;
-    }
-    if (providerElement._providerInstance == null) {
-      // lazy init provider
-      providerElement._initProvider();
-    }
-    return providerElement._providerInstance;
+    if (providerElement == null) return null;
+
+    return providerElement.providerInstance;
   }
 }
 
 typedef ProviderBuilder<T> = T Function(BuildContext context);
 
 class ProviderWidget<T extends Listenable> extends InheritedWidget {
+  // Provider 生命周期由外部管理
   const ProviderWidget({
     super.key,
-    required this.provider,
+    required T provider,
     required super.child,
-  });
+  })  : providerBuilder = null,
+        providerInstance = provider;
 
-  final ProviderBuilder<T> provider;
+  // Builder 模式，ProviderBuilder 用于懒加载 Provider 实例
+  // Provider 生命周期由 ProviderWidget 管理
+  const ProviderWidget.owned({
+    super.key,
+    required ProviderBuilder<T> provider,
+    required super.child,
+  })  : providerBuilder = provider,
+        providerInstance = null;
+
+  final ProviderBuilder<T>? providerBuilder;
+  final T? providerInstance;
 
   @override
   bool updateShouldNotify(covariant ProviderWidget<T> oldWidget) {
-    return oldWidget.provider != provider;
+    return oldWidget.providerBuilder != providerBuilder || oldWidget.providerInstance != providerInstance;
   }
 
   @override
@@ -79,33 +84,60 @@ class ProviderWidget<T extends Listenable> extends InheritedWidget {
 }
 
 class _ProviderElement<T extends Listenable> extends InheritedElement {
-  _ProviderElement(ProviderWidget<T> widget) : super(widget);
+  _ProviderElement(ProviderWidget<T> widget) : super(widget) {
+    // If not owned, listen to the provider instance immediately
+    widget.providerInstance?.addListener(_handleUpdate);
+  }
 
   @override
   ProviderWidget<T> get widget => super.widget as ProviderWidget<T>;
 
-  bool _dirty = false;
-
-  T? _providerInstance;
-
-  void _initProvider() {
-    _providerInstance = widget.provider.call(this);
-    assert(_providerInstance != null, 'ProviderBuilder should not return null');
-    _providerInstance?.addListener(_handleUpdate);
+  T get providerInstance {
+    if (widget.providerBuilder != null) {
+      if (lazyProviderInstance == null) _initLazyProvider();
+      return lazyProviderInstance!;
+    } else {
+      return widget.providerInstance!;
+    }
   }
 
-  void _tryDispose() {
-    _providerInstance?.removeListener(_handleUpdate);
-    if (_providerInstance is ChangeNotifier) {
-      (_providerInstance as ChangeNotifier).dispose();
+  bool _dirty = false;
+
+  @visibleForTesting
+  T? lazyProviderInstance;
+
+  void _initLazyProvider() {
+    assert(lazyProviderInstance == null, 'Provider instance should be null');
+    if (widget.providerBuilder != null) {
+      lazyProviderInstance = widget.providerBuilder!(this);
     }
-    _providerInstance = null;
+    assert(lazyProviderInstance != null, 'Provider instance should not be null');
+    lazyProviderInstance?.addListener(_handleUpdate);
+  }
+
+  void _tryDisposeLazyProvider() {
+    lazyProviderInstance?.removeListener(_handleUpdate);
+    if (lazyProviderInstance is ChangeNotifier) {
+      (lazyProviderInstance as ChangeNotifier).dispose();
+    }
+    lazyProviderInstance = null;
+  }
+
+  void _tryRemoveListener() {
+    widget.providerInstance?.removeListener(_handleUpdate);
   }
 
   @override
   void update(ProviderWidget<T> newWidget) {
-    if (widget.provider != newWidget.provider) {
-      _tryDispose();
+    if (widget.providerBuilder != newWidget.providerBuilder) {
+      // ProviderBuilder 变化，重新初始化
+      // 释放旧 Provider 实例
+      if (widget.providerBuilder != null || lazyProviderInstance != null) _tryDisposeLazyProvider();
+    }
+    if (widget.providerInstance != newWidget.providerInstance) {
+      // Provider 实例变化，重新添加监听
+      _tryRemoveListener();
+      newWidget.providerInstance?.addListener(_handleUpdate);
     }
     super.update(newWidget);
   }
@@ -131,7 +163,8 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
 
   @override
   void unmount() {
-    _tryDispose();
+    _tryDisposeLazyProvider();
+    _tryRemoveListener();
     super.unmount();
   }
 }
