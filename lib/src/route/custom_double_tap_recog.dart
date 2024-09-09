@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/gestures.dart';
 
+// The following code is copied from the Flutter SDK.
+// Fast double tap gesture recognizer.
 const kCustomDoubleTapTimeout = Duration(milliseconds: 120);
 
 class CustomDoubleTapGestureRecognizer extends GestureRecognizer {

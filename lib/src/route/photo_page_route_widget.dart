@@ -6,7 +6,7 @@ const double _kMinScale = 1.0;
 class _PhotoPageRouteWidget extends StatefulWidget {
   const _PhotoPageRouteWidget({
     required this.navigator,
-    required this.realTransitionProgress,
+    required this.navigationTransitionProgress,
     required this.draggableChild,
     required this.background,
     this.foreground,
@@ -14,7 +14,7 @@ class _PhotoPageRouteWidget extends StatefulWidget {
 
   final Widget? foreground;
   final NavigatorState navigator;
-  final Animation<double> realTransitionProgress;
+  final Animation<double> navigationTransitionProgress;
   final Widget draggableChild;
 
   final Widget background;
@@ -24,116 +24,11 @@ class _PhotoPageRouteWidget extends StatefulWidget {
 }
 
 class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
-    with TickerProviderStateMixin, _PhotoPageRouteWidgetStateMixin {
+    with TickerProviderStateMixin<_PhotoPageRouteWidget> {
   final _tapGestureRecognizer = TapGestureRecognizer();
-
-  late final _transitionProgress = AnimationController(value: 1.0, vsync: widget.navigator);
-
-  @override
-  bool dragEnd(Offset velocity) {
-    final navigator = widget.navigator;
-    // Fling in the appropriate direction.
-    // AnimationController.fling is guaranteed to
-    // take at least one frame.
-    //
-    // This curve has been determined through rigorously eyeballing native iOS
-    // animations.
-    const Curve animationCurve = Curves.fastLinearToSlowEaseIn;
-    final bool animateForward;
-
-    // If the user releases the page with sufficient velocity,
-    if (velocity.dy.abs() / navigator.context.size!.height >= _kMinFlingVelocity) {
-      animateForward = false;
-    } else {
-      animateForward = _transitionProgress.value > _kCloseOpacity;
-    }
-    if (animateForward) {
-      // The closer the panel is to dismissing, the shorter the animation is.
-      // We want to cap the animation time, but we want to use a linear curve
-      // to determine it.
-      final int droppedPageForwardAnimationTime = min(
-        lerpDouble(_kMaxDroppedSwipePageForwardAnimationTime, 0, _transitionProgress.value)!.floor(),
-        _kMaxPageBackAnimationTime,
-      );
-      _transitionProgress.animateTo(1.0,
-          duration: Duration(milliseconds: droppedPageForwardAnimationTime), curve: animationCurve);
-      return false;
-    } else {
-      // This route is destined to pop at this point. Reuse navigator's pop.
-      navigator.pop();
-      return true;
-    }
-  }
-
-  void _handleOnPointerDown(PointerDownEvent event) {
-    _scaleGestureRecognizer.addPointer(event);
-    _tapGestureRecognizer.addPointer(event);
-    _doubleTapGestureRecognizer.addPointer(event);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tapGestureRecognizer.onTap = widget.navigator.pop;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _size = View.of(context).screenSize;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ValueListenableBuilder(
-          valueListenable: _transitionProgress,
-          builder: (ctx, val, c) => ValueListenableBuilder(
-            valueListenable: widget.realTransitionProgress,
-            builder: (ctx, animationVal, c) => Opacity(
-              opacity: animationVal * val,
-              child: widget.background,
-            ),
-          ),
-        ),
-        ValueListenableBuilder(
-          valueListenable: transform,
-          builder: (context, transform, child) => Transform(
-            alignment: Alignment.center,
-            transform: transform,
-            child: Listener(onPointerDown: _handleOnPointerDown, child: child),
-          ),
-          child: widget.draggableChild,
-        ),
-        if (widget.foreground != null)
-          ValueListenableBuilder(
-            valueListenable: _transitionProgress,
-            builder: (ctx, val, c) => ValueListenableBuilder(
-              valueListenable: widget.realTransitionProgress,
-              builder: (ctx, animationVal, c) => Opacity(
-                opacity: animationVal * val,
-                child: widget.foreground,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _scaleGestureRecognizer.dispose();
-    _tapGestureRecognizer.dispose();
-    _transitionProgress.dispose();
-    super.dispose();
-  }
-
-  @override
-  void dragUpdate(Offset offset) {
-    _transitionProgress.value = (1.0 - offset.dy.abs() / _kOffset2TransitionProgressDivider).clamp(0.0, 1.0);
-  }
-}
-
-mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRouteWidget> {
   final _doubleTapGestureRecognizer = CustomDoubleTapGestureRecognizer();
   final _scaleGestureRecognizer = ScaleGestureRecognizer();
+  late final gestureTransitionProgress = AnimationController(value: 1.0, vsync: widget.navigator);
 
   Offset? _normalizedPosition;
   double? _scaleBeforeGestureStart;
@@ -149,18 +44,6 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
   Animation<Offset>? _positionAnimation;
 
   bool? verticalDrag;
-  bool? isScale;
-
-  @override
-  void dispose() {
-    _scaleAnimationController.removeStatusListener(onAnimationStatus);
-    _scaleAnimationController.dispose();
-    _positionAnimationController.dispose();
-    _doubleTapGestureRecognizer.dispose();
-    _scaleGestureRecognizer.dispose();
-    transform.dispose();
-    super.dispose();
-  }
 
   void _setState() {
     final newVal = Matrix4.identity()
@@ -176,44 +59,35 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
     _scaleAnimationController.stop();
     _positionAnimationController.stop();
     verticalDrag = null;
-    isScale = null;
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
     final double newScale = _scaleBeforeGestureStart! * details.scale;
     final Offset delta = details.focalPoint - _normalizedPosition!;
 
-    if (details.pointerCount == 2) {
+    scale = newScale;
+    position = delta;
+
+    if (details.pointerCount >= 2) {
       // scale
-      scale = newScale;
-      position = delta;
-      isScale ??= true;
-      _setState();
-    } else if (details.pointerCount == 1) {
-      if (_scaleBeforeGestureStart == 1.0 && verticalDrag != false) {
-        scale = (1 - position.dy.abs() / _kOffset2ScaleDivider).clamp(0.6, 1.0);
-        position = delta;
+    }
+    if (details.pointerCount == 1) {
+      // drag
+      if (_scaleBeforeGestureStart == 1.0) {
+        // the initial drag, can fast pop
+        // update draggable child's scale and opacity by dy
+        scale *= (1 - position.dy.abs() / _kOffset2ScaleDivider).clamp(_kPopMinScale, 1.0);
         verticalDrag ??= details.focalPointDelta.dx.abs() < details.focalPointDelta.dy.abs();
-        isScale = false;
-        // drag
-        dragUpdate(delta);
-        _setState();
-      } else {
-        // drag after scale
-        position = delta;
-        isScale ??= true;
-        _setState();
+        // other parts' opacity
+        gestureTransitionProgress.value =
+            (1.0 - position.dy.abs() / _kOffset2TransitionProgressDivider).clamp(0.0, 1.0);
       }
     }
+    _setState();
   }
 
-  // return is popped
-  bool dragEnd(Offset velocity);
-
-  void dragUpdate(Offset offset);
-
   void _onScaleEnd(ScaleEndDetails details) {
-    if (dragEnd(details.velocity.pixelsPerSecond)) {
+    if (dragEndIfPopped(details.velocity.pixelsPerSecond)) {
       return;
     }
 
@@ -318,16 +192,14 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
       animatePosition(position, Offset.zero);
     } else {
       // scale to 2x
+      // todo: probablyDoubleTapPosition is not correct
       // animatePosition(position, probablyDoubleTapPosition);
       animateScale(scale, 2.0);
     }
   }
 
   void animateScale(double from, double to) {
-    _scaleAnimation = Tween<double>(
-      begin: from,
-      end: to,
-    ).animate(_scaleAnimationController);
+    _scaleAnimation = Tween<double>(begin: from, end: to).animate(_scaleAnimationController);
     _scaleAnimationController
       ..value = 0.0
       ..fling(velocity: 0.4);
@@ -340,24 +212,55 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
       ..fling(velocity: 0.4);
   }
 
-  void onAnimationStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      /// Check if scale is equal to initial after scale animation update
-      // if (scaleStateController.scaleState != PhotoViewScaleState.initial && scale == scaleBoundaries.initialScale) {
-      //   scaleStateController.setInvisibly(PhotoViewScaleState.initial);
-      // }
+  bool dragEndIfPopped(Offset velocity) {
+    final navigator = widget.navigator;
+    // Fling in the appropriate direction.
+    // AnimationController.fling is guaranteed to
+    // take at least one frame.
+    //
+    // This curve has been determined through rigorously eyeballing native iOS
+    // animations.
+    const Curve animationCurve = Curves.fastLinearToSlowEaseIn;
+    final bool animateForward;
+
+    // If the user releases the page with sufficient velocity,
+    if (velocity.dy.abs() / navigator.context.size!.height >= _kMinFlingVelocity) {
+      animateForward = false;
+    } else {
+      animateForward = gestureTransitionProgress.value > _kCloseOpacity;
     }
+    if (animateForward) {
+      // The closer the panel is to dismissing, the shorter the animation is.
+      // We want to cap the animation time, but we want to use a linear curve
+      // to determine it.
+      final int droppedPageForwardAnimationTime = min(
+        lerpDouble(_kMaxDroppedSwipePageForwardAnimationTime, 0, gestureTransitionProgress.value)!.floor(),
+        _kMaxPageBackAnimationTime,
+      );
+      gestureTransitionProgress.animateTo(1.0,
+          duration: Duration(milliseconds: droppedPageForwardAnimationTime), curve: animationCurve);
+      return false;
+    } else {
+      // This route is destined to pop at this point. Reuse navigator's pop.
+      navigator.pop();
+      return true;
+    }
+  }
+
+  void _handleOnPointerDown(PointerDownEvent event) {
+    _scaleGestureRecognizer.addPointer(event);
+    _tapGestureRecognizer.addPointer(event);
+    _doubleTapGestureRecognizer.addPointer(event);
   }
 
   @override
   void initState() {
     super.initState();
-    _scaleAnimationController
-      ..addStatusListener(onAnimationStatus)
-      ..addListener(() {
-        scale = _scaleAnimation!.value;
-        _setState();
-      });
+    _tapGestureRecognizer.onTap = widget.navigator.pop;
+    _scaleAnimationController.addListener(() {
+      scale = _scaleAnimation!.value;
+      _setState();
+    });
     _positionAnimationController.addListener(() {
       position = _positionAnimation!.value;
       _setState();
@@ -371,5 +274,52 @@ mixin _PhotoPageRouteWidgetStateMixin on TickerProviderStateMixin<_PhotoPageRout
       ..onStart = _onScaleStart
       ..onUpdate = _onScaleUpdate
       ..onEnd = _onScaleEnd;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _size = MediaQuery.sizeOf(context);
+    final opacityListenable = Listenable.merge([gestureTransitionProgress, widget.navigationTransitionProgress]);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ListenableBuilder(
+          listenable: opacityListenable,
+          builder: (ctx, c) => Opacity(
+            opacity: gestureTransitionProgress.value * widget.navigationTransitionProgress.value,
+            child: widget.background,
+          ),
+        ),
+        ValueListenableBuilder(
+          valueListenable: transform,
+          builder: (context, transform, child) => Transform(
+            alignment: Alignment.center,
+            transform: transform,
+            child: Listener(onPointerDown: _handleOnPointerDown, child: child),
+          ),
+          child: widget.draggableChild,
+        ),
+        if (widget.foreground != null)
+          ListenableBuilder(
+            listenable: opacityListenable,
+            builder: (ctx, c) => Opacity(
+              opacity: gestureTransitionProgress.value * widget.navigationTransitionProgress.value,
+              child: widget.foreground,
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _scaleGestureRecognizer.dispose();
+    _tapGestureRecognizer.dispose();
+    gestureTransitionProgress.dispose();
+    _scaleAnimationController.dispose();
+    _positionAnimationController.dispose();
+    _doubleTapGestureRecognizer.dispose();
+    transform.dispose();
+    super.dispose();
   }
 }

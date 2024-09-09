@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
-import '../util/widget/widget_util.dart';
 import 'custom_double_tap_recog.dart';
 
 part 'photo_page_route_widget.dart';
@@ -20,6 +19,7 @@ const int _kMaxPageBackAnimationTime = 300; // Milliseconds.
 const int _kOffset2TransitionProgressDivider = 200;
 const double _kCloseOpacity = 0.25;
 const int _kOffset2ScaleDivider = 330;
+const double _kPopMinScale = 0.55;
 
 class PhotoPageRoute extends PageRoute<void> {
   PhotoPageRoute({
@@ -59,7 +59,7 @@ class PhotoPageRoute extends PageRoute<void> {
   Widget buildPage(BuildContext context, Animation<double> animation, secondaryAnimation) {
     return _PhotoPageRouteWidget(
       navigator: navigator!,
-      realTransitionProgress: animation,
+      navigationTransitionProgress: animation,
       draggableChild: draggableChild,
       background: background,
       foreground: foreground,
