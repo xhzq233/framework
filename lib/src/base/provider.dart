@@ -1,7 +1,6 @@
-/// framework - state_provider
+/// framework - provider
 /// Created by xhz on 8/27/24
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Provider 类似于 ViewModel，用于绑定数据和 UI，永远使提供的数据保持最新
@@ -27,11 +26,31 @@ import 'package:flutter/widgets.dart';
 /// ProviderWidget 和 Provider.read 放 Widget 树何处都行，根据 Provider 掌管的 UI 决定
 /// 但是 Provider.watch 要尽量往下，避免 rebuild 太大的树
 abstract class Provider with ChangeNotifier {
+  Provider() {
+    assert(() {
+      debugPrint('[D]Provider created: $runtimeType#$hashCode');
+      return true;
+    }());
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    assert(() {
+      debugPrint('[D]Provider disposed: $runtimeType#$hashCode');
+      return true;
+    }());
+  }
+
+  /// 通过 Provider.watch 获取 Provider 实例，监听 Provider 实例
+  /// 建议跟数据相关时使用，比如 UI 层，`Provider.watch<MyProvider>(context).someUIData`
   static T watch<T extends Listenable>(BuildContext context) {
     context.dependOnInheritedWidgetOfExactType<ProviderWidget<T>>();
     return read<T>(context);
   }
 
+  /// 通过 Provider.read 获取 Provider 实例，不监听
+  /// 建议跟数据无关时使用，比如调用某个方法, `Provider.read<MyProvider>(context).someMethod()`
   static T read<T extends Listenable>(BuildContext context) {
     final _ProviderElement<T>? providerElement =
         context.getElementForInheritedWidgetOfExactType<ProviderWidget<T>>() as _ProviderElement<T>?;
@@ -54,7 +73,7 @@ abstract class Provider with ChangeNotifier {
 typedef ProviderBuilder<T> = T Function(BuildContext context);
 
 class ProviderWidget<T extends Listenable> extends InheritedWidget {
-  // Provider 生命周期由外部管理
+  /// Provider 生命周期由外部管理
   const ProviderWidget({
     super.key,
     required T provider,
@@ -62,8 +81,8 @@ class ProviderWidget<T extends Listenable> extends InheritedWidget {
   })  : providerBuilder = null,
         providerInstance = provider;
 
-  // Builder 模式，ProviderBuilder 用于懒加载 Provider 实例
-  // Provider 生命周期由 ProviderWidget 管理
+  /// Builder 模式，ProviderBuilder 用于懒加载 Provider 实例
+  /// Provider 生命周期由 ProviderWidget 管理
   const ProviderWidget.owned({
     super.key,
     required ProviderBuilder<T> provider,
