@@ -8,3 +8,6 @@ export 'src/widget/disappear.dart';
 export 'src/widget/custom_pinned_app_bar.dart';
 export 'src/widget/prelaunch.dart';
 export 'src/widget/status_bar_region.dart';
+export 'src/widget/page_sheet.dart';
+export 'src/widget/list_section.dart';
+export 'src/widget/video_page.dart';

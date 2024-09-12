@@ -49,9 +49,16 @@ class ListItemModel extends StatelessWidget {
     this.moreInfo,
     required bool value,
     required ValueChanged<bool> onChanged,
-  })  : trailingIcon = CupertinoSwitch(
-          value: value,
-          onChanged: onChanged,
+  })  : trailingIcon = SizedBox(
+          height: 24,
+          child: Transform.scale(
+            scale: 0.85,
+            child: CupertinoSwitch(
+              value: value,
+              onChanged: onChanged,
+              activeColor: const Color(0xFF0AB8A6),
+            ),
+          ),
         ),
         onTap = null;
 
