@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'custom_double_tap_recog.dart';
 
@@ -29,6 +30,7 @@ class PhotoPageRoute extends PageRoute<void> {
     this.barrierLabel,
     required this.draggableChild,
     required this.heroTag,
+    this.systemOverlayStyle = SystemUiOverlayStyle.light,
     this.maxScale = 2.4,
     this.minScale = 1.0,
     this.background = const ColoredBox(color: Color(0xFF000000)),
@@ -59,18 +61,22 @@ class PhotoPageRoute extends PageRoute<void> {
   final String heroTag;
   final double maxScale;
   final double minScale;
+  final SystemUiOverlayStyle systemOverlayStyle;
 
   @override
   @protected
   Widget buildPage(BuildContext context, Animation<double> animation, secondaryAnimation) {
-    return _PhotoPageRouteWidget(
-      navigator: navigator!,
-      navigationTransitionProgress: animation,
-      draggableChild: Hero(tag: heroTag, child: FittedBox(child: draggableChild)),
-      background: background,
-      foreground: foreground,
-      maxScale: maxScale,
-      minScale: minScale,
+    return AnnotatedRegion(
+      value: systemOverlayStyle,
+      child: _PhotoPageRouteWidget(
+        navigator: navigator!,
+        navigationTransitionProgress: animation,
+        draggableChild: Hero(tag: heroTag, child: FittedBox(child: draggableChild)),
+        background: background,
+        foreground: foreground,
+        maxScale: maxScale,
+        minScale: minScale,
+      ),
     );
   }
 }

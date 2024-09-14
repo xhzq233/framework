@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:framework/route.dart';
 
 import 'package:framework/cupertino.dart';
@@ -35,11 +36,14 @@ class _Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: Colors.green,
-      child: Align(
-        child: NNAvatar(
-          imageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
+    return const AnnotatedRegion(
+      value: SystemUiOverlayStyle.dark,
+      child: ColoredBox(
+        color: Colors.green,
+        child: Align(
+          child: NNAvatar(
+            imageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
+          ),
         ),
       ),
     );
