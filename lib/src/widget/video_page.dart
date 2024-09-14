@@ -7,9 +7,9 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:framework/cupertino.dart';
+import 'package:framework/route.dart';
 import 'package:video_player/video_player.dart';
-
-import '../../cupertino.dart';
 
 // todo
 final CacheManager _videoCacheManager = CacheManager(Config(
@@ -18,10 +18,17 @@ final CacheManager _videoCacheManager = CacheManager(Config(
   stalePeriod: const Duration(days: 999),
 ));
 
+const _defaultPlaceHolder = SizedBox(width: 60, height: 60);
+
 class VideoThumbWidget extends StatefulWidget {
-  const VideoThumbWidget({super.key, required this.videoUrl});
+  const VideoThumbWidget({super.key, required this.videoUrl, this.placeholder = _defaultPlaceHolder});
+
+  static void clearCache() {
+    _videoCacheManager.emptyCache();
+  }
 
   final String videoUrl;
+  final Widget placeholder;
 
   @override
   State<VideoThumbWidget> createState() => _VideoThumbWidgetState();
@@ -31,6 +38,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
   double? downloadProgress;
   FileInfo? _fileInfo;
   StreamSubscription<FileResponse>? _fileStreamSubscription;
+  late final Object heroTag = hashCode;
 
   void _startDownload() {
     if (_fileInfo != null || _fileStreamSubscription != null) {
@@ -38,7 +46,6 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
     }
     _fileStreamSubscription = _videoCacheManager.getFileStream(widget.videoUrl, withProgress: true).listen(
       (FileResponse event) {
-        print('event: $event');
         if (event is DownloadProgress) {
           setState(() {
             downloadProgress = event.progress;
@@ -46,6 +53,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
         } else if (event is FileInfo) {
           setState(() {
             _fileInfo = event;
+            _fileStreamSubscription = null;
           });
         }
       },
@@ -57,7 +65,27 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
       downloadProgress = null;
       _fileInfo = null;
       _fileStreamSubscription?.cancel();
+      _fileStreamSubscription = null;
     });
+  }
+
+  void _tap() {
+    if (_fileInfo != null) {
+      if (_fileInfo!.file.existsSync() == false) {
+        _reset();
+        return;
+      }
+      Navigator.push(
+          context,
+          PhotoPageRoute(
+              draggableChild: SizedBox(
+                width: MediaQuery.sizeOf(context).width,
+                child: _VideoWidget(videoFile: _fileInfo!.file),
+              ),
+              heroTag: heroTag));
+    } else {
+      _startDownload();
+    }
   }
 
   @override
@@ -90,61 +118,49 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
   Widget build(BuildContext context) {
     Widget icon;
     if (_fileInfo != null) {
-      icon = const Icon(CupertinoIcons.play_arrow, color: Colors.white, size: 36);
+      icon = const Icon(CupertinoIcons.play_circle, color: Colors.white, size: 36);
     } else if (downloadProgress != null) {
-      icon = CircularProgressIndicator(value: downloadProgress, color: Colors.white);
+      icon = Align(child: CircularProgressIndicator(value: downloadProgress, color: Colors.white));
     } else {
       icon = const Icon(CupertinoIcons.down_arrow, color: Colors.white, size: 36);
     }
+
     return CustomCupertinoButton(
-      onTap: () async {
-        if (_fileInfo != null) {
-          await Navigator.push(context, VideoPage.route(_fileInfo!.file.path));
-        } else {
-          _startDownload();
-        }
-      },
-      child: ColoredBox(
-        color: Colors.black,
-        child: Align(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: icon,
+      onTap: _tap,
+      child: Stack(
+        children: [
+          Hero(tag: heroTag, child: widget.placeholder),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              child: icon,
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class VideoPage extends StatefulWidget {
-  // todo: hero
-  const VideoPage({super.key, required this.videoFileUrl, String? heroTag}) : heroTag = heroTag ?? videoFileUrl;
+class _VideoWidget extends StatefulWidget {
+  const _VideoWidget({required this.videoFile});
 
-  static Route<void> route(String videoUrl, {String? heroTag}) {
-    // Fade in the video page.
-    return PageRouteBuilder<void>(
-      pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
-        opacity: animation,
-        child: VideoPage(videoFileUrl: videoUrl, heroTag: heroTag),
-      ),
-    );
-  }
-
-  final String videoFileUrl;
-  final String heroTag;
+  final File videoFile;
 
   @override
-  State<VideoPage> createState() => _VideoPageState();
+  State<_VideoWidget> createState() => _VideoWidgetState();
 }
 
-class _VideoPageState extends State<VideoPage> {
+class _VideoWidgetState extends State<_VideoWidget> {
   late final VideoPlayerController _videoPlayerController;
 
   @override
   void initState() {
     super.initState();
-    _videoPlayerController = VideoPlayerController.file(File(widget.videoFileUrl));
+    _videoPlayerController = VideoPlayerController.file(widget.videoFile);
     _videoPlayerController.addListener(() => setState(() {}));
     _started();
   }
@@ -157,29 +173,35 @@ class _VideoPageState extends State<VideoPage> {
 
   void _started() async {
     await _videoPlayerController.initialize();
-    await _videoPlayerController.play();
-    setState(() {});
+    _videoPlayerController.play();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Material(
-        color: Colors.black,
-        child: Align(
-          child: AspectRatio(
-            aspectRatio: _videoPlayerController.value.aspectRatio,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                VideoPlayer(_videoPlayerController),
-                ClosedCaption(text: _videoPlayerController.value.caption.text),
-                _ControlsOverlay(controller: _videoPlayerController),
-                VideoProgressIndicator(_videoPlayerController, allowScrubbing: true),
-              ],
-            ),
-          ),
+    return Material(
+      color: Colors.black,
+      child: AspectRatio(
+        aspectRatio: _videoPlayerController.value.aspectRatio,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            VideoPlayer(_videoPlayerController),
+            if (_videoPlayerController.value.isInitialized)
+              ClosedCaption(text: _videoPlayerController.value.caption.text),
+            if (_videoPlayerController.value.isInitialized) _ControlsOverlay(controller: _videoPlayerController),
+            if (_videoPlayerController.value.isInitialized)
+              VideoProgressIndicator(
+                _videoPlayerController,
+                allowScrubbing: true,
+                colors: const VideoProgressColors(
+                  playedColor: Colors.red,
+                  bufferedColor: Colors.grey,
+                  backgroundColor: Colors.white,
+                ),
+                // Expand draggable area to tap and scrub.
+                padding: const EdgeInsets.only(top: 36),
+              ),
+          ],
         ),
       ),
     );
