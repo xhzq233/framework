@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:framework/route.dart';
 
-/// framework - photo_page_route
-/// Created by xhz on 9/8/24
+import 'package:framework/cupertino.dart';
+
+import 'package:framework/widgets.dart';
+
+class NNAvatar extends StatelessWidget {
+  const NNAvatar({super.key, required this.imageUrl, this.size = 200});
+
+  final String imageUrl;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = hashCode.toString();
+    return CustomCupertinoButton(
+      onTap: () => Navigator.push(context, PhotoPageRoute(draggableChild: NNImage(imageUrl), heroTag: tag)),
+      child: Hero(
+        tag: tag,
+        child: NNImage(imageUrl, fit: BoxFit.contain, width: size),
+      ),
+    );
+  }
+}
 
 void main() {
   runApp(
@@ -15,29 +35,12 @@ class _Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return const ColoredBox(
       color: Colors.green,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          Navigator.of(context).push(
-            PhotoPageRoute(
-              draggableChild: const Hero(
-                  tag: 'null11',
-                  child: Icon(
-                    Icons.ac_unit,
-                    color: Colors.white,
-                    size: 100,
-                  )),
-            ),
-          );
-        },
-        child: const Hero(
-            tag: 'null11',
-            child: Icon(
-              Icons.ac_unit,
-              color: Colors.white,
-            )),
+      child: Align(
+        child: NNAvatar(
+          imageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
+        ),
       ),
     );
   }

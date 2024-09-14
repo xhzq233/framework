@@ -1,21 +1,22 @@
 part of 'photo_page_route.dart';
 
-const double _kMaxScale = 1.6;
-const double _kMinScale = 1.0;
-
 class _PhotoPageRouteWidget extends StatefulWidget {
   const _PhotoPageRouteWidget({
     required this.navigator,
     required this.navigationTransitionProgress,
     required this.draggableChild,
     required this.background,
-    this.foreground,
+    required this.foreground,
+    required this.minScale,
+    required this.maxScale,
   });
 
   final Widget? foreground;
   final NavigatorState navigator;
   final Animation<double> navigationTransitionProgress;
   final Widget draggableChild;
+  final double minScale;
+  final double maxScale;
 
   final Widget background;
 
@@ -74,13 +75,17 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     if (details.pointerCount == 1) {
       // drag
       if (_scaleBeforeGestureStart == 1.0) {
-        // the initial drag, can fast pop
-        // update draggable child's scale and opacity by dy
-        scale *= (1 - position.dy.abs() / _kOffset2ScaleDivider).clamp(_kPopMinScale, 1.0);
-        verticalDrag ??= details.focalPointDelta.dx.abs() < details.focalPointDelta.dy.abs();
-        // other parts' opacity
-        gestureTransitionProgress.value =
-            (1.0 - position.dy.abs() / _kOffset2TransitionProgressDivider).clamp(0.0, 1.0);
+        // If drag up, no opacity change
+        if (position.dy < 0) {
+        } else {
+          // the initial drag, can fast pop
+          // update draggable child's scale and opacity by dy
+          scale *= (1 - position.dy.abs() / _kOffset2ScaleDivider).clamp(_kPopMinScale, 1.0);
+          verticalDrag ??= details.focalPointDelta.dx.abs() < details.focalPointDelta.dy.abs();
+          // other parts' opacity
+          gestureTransitionProgress.value =
+              (1.0 - position.dy.abs() / _kOffset2TransitionProgressDivider).clamp(0.0, 1.0);
+        }
       }
     }
     _setState();
@@ -92,25 +97,25 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     }
 
     //animate back to maxScale if gesture exceeded the maxScale specified
-    if (scale > _kMaxScale) {
-      final double scaleComebackRatio = _kMaxScale / scale;
-      animateScale(scale, _kMaxScale);
+    if (scale > widget.maxScale) {
+      final double scaleComebackRatio = widget.maxScale / scale;
+      animateScale(scale, widget.maxScale);
       final Offset clampedPosition = clampPosition(
         position: position * scaleComebackRatio,
-        scale: _kMaxScale,
+        scale: widget.maxScale,
       );
       animatePosition(position, clampedPosition);
       return;
     }
-    if (scale < _kMinScale) {
+    if (scale < widget.minScale) {
       //animate back to minScale if gesture fell smaller than the minScale specified
-      final double scaleComebackRatio = _kMinScale / scale;
-      animateScale(scale, _kMinScale);
+      final double scaleComebackRatio = widget.minScale / scale;
+      animateScale(scale, widget.minScale);
       animatePosition(
         position,
         clampPosition(
           position: position * scaleComebackRatio,
-          scale: _kMinScale,
+          scale: widget.minScale,
         ),
       );
       return;
@@ -193,8 +198,8 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     } else {
       // scale to 2x
       // todo: probablyDoubleTapPosition is not correct
-      // animatePosition(position, probablyDoubleTapPosition);
-      animateScale(scale, 2.0);
+      animatePosition(position, -probablyDoubleTapPosition);
+      animateScale(scale, 2.5);
     }
   }
 
@@ -223,10 +228,13 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     const Curve animationCurve = Curves.fastLinearToSlowEaseIn;
     final bool animateForward;
 
-    // If the user releases the page with sufficient velocity,
-    if (velocity.dy.abs() / navigator.context.size!.height >= _kMinFlingVelocity) {
+    if (velocity.dy < 0) {
+      animateForward = true;
+    } else if (velocity.dy.abs() / navigator.context.size!.height >= _kMinFlingVelocity) {
+      // If the user releases the page with sufficient velocity,
       animateForward = false;
     } else {
+      // If the user releases the page with sufficient distance,
       animateForward = gestureTransitionProgress.value > _kCloseOpacity;
     }
     if (animateForward) {
@@ -267,8 +275,10 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
     });
     _doubleTapGestureRecognizer
       ..onDoubleTap = _onDoubleTap
-      ..onDoubleTapDown = (details) {
-        probablyDoubleTapPosition = details.localPosition - position;
+      ..onDoubleTapDown = (TapDownDetails details) {
+        // save the position of the double tap
+        // relative to the draggable child center
+        probablyDoubleTapPosition = (details.localPosition - position) - _size.center(Offset.zero);
       };
     _scaleGestureRecognizer
       ..onStart = _onScaleStart
@@ -295,7 +305,11 @@ class _PhotoPageRouteWidgetState extends State<_PhotoPageRouteWidget>
           builder: (context, transform, child) => Transform(
             alignment: Alignment.center,
             transform: transform,
-            child: Listener(onPointerDown: _handleOnPointerDown, child: child),
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: _handleOnPointerDown,
+              child: child,
+            ),
           ),
           child: widget.draggableChild,
         ),

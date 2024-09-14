@@ -28,6 +28,9 @@ class PhotoPageRoute extends PageRoute<void> {
     this.barrierColor,
     this.barrierLabel,
     required this.draggableChild,
+    required this.heroTag,
+    this.maxScale = 2.4,
+    this.minScale = 1.0,
     this.background = const ColoredBox(color: Color(0xFF000000)),
     this.foreground,
     super.fullscreenDialog,
@@ -53,6 +56,9 @@ class PhotoPageRoute extends PageRoute<void> {
 
   final Widget background;
   final Widget? foreground;
+  final String heroTag;
+  final double maxScale;
+  final double minScale;
 
   @override
   @protected
@@ -60,9 +66,11 @@ class PhotoPageRoute extends PageRoute<void> {
     return _PhotoPageRouteWidget(
       navigator: navigator!,
       navigationTransitionProgress: animation,
-      draggableChild: draggableChild,
+      draggableChild: Hero(tag: heroTag, child: FittedBox(child: draggableChild)),
       background: background,
       foreground: foreground,
+      maxScale: maxScale,
+      minScale: minScale,
     );
   }
 }
