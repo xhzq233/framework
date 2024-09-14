@@ -14,7 +14,7 @@ class NNAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tag = hashCode.toString();
+    final tag = hashCode;
     return CustomCupertinoButton(
       onTap: () => Navigator.push(context, PhotoPageRoute(draggableChild: NNImage(imageUrl), heroTag: tag)),
       child: Hero(
@@ -42,7 +42,8 @@ class _Home extends StatelessWidget {
         color: Colors.green,
         child: Align(
           child: NNAvatar(
-            imageUrl: 'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
+            imageUrl:
+                'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
           ),
         ),
       ),

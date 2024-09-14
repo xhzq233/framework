@@ -58,7 +58,7 @@ class PhotoPageRoute extends PageRoute<void> {
 
   final Widget background;
   final Widget? foreground;
-  final String heroTag;
+  final Object heroTag;
   final double maxScale;
   final double minScale;
   final SystemUiOverlayStyle systemOverlayStyle;
