@@ -22,6 +22,17 @@ const double _kCloseOpacity = 0.25;
 const int _kOffset2ScaleDivider = 330;
 const double _kPopMinScale = 0.55;
 
+Widget photoFlightShuttleBuilder(
+  BuildContext flightContext,
+  Animation<double> animation,
+  HeroFlightDirection flightDirection,
+  BuildContext fromHeroContext,
+  BuildContext toHeroContext,
+) {
+  final Widget hero = flightDirection == HeroFlightDirection.push ? toHeroContext.widget : fromHeroContext.widget;
+  return hero;
+}
+
 class PhotoPageRoute extends PageRoute<void> {
   PhotoPageRoute({
     super.settings,
@@ -71,7 +82,11 @@ class PhotoPageRoute extends PageRoute<void> {
       child: _PhotoPageRouteWidget(
         navigator: navigator!,
         navigationTransitionProgress: animation,
-        draggableChild: Hero(tag: heroTag, child: FittedBox(child: draggableChild)),
+        draggableChild: Hero(
+          tag: heroTag,
+          flightShuttleBuilder: photoFlightShuttleBuilder,
+          child: FittedBox(child: draggableChild),
+        ),
         background: background,
         foreground: foreground,
         maxScale: maxScale,
