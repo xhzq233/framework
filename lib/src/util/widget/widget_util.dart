@@ -125,13 +125,12 @@ extension CompressedImageAssetsGetter on String {
   }
 }
 
-extension GetImageFromWidget on Widget {
+extension GetImageFromWidget on BuildContext {
   /// If you are building a desktop/web application that supports multiple view. Consider passing the [context] so that flutter know which view to capture.
-  static Future<ui.Image> widgetToUiImage(
+  Future<ui.Image> toUiImage(
     Widget widget, {
     Duration delay = const Duration(seconds: 1),
     double? pixelRatio,
-    BuildContext? context,
     Size? targetSize,
   }) async {
     ///
@@ -141,22 +140,19 @@ extension GetImageFromWidget on Widget {
     bool isDirty = false;
 
     Widget child = widget;
+    BuildContext context = this;
 
-    if (context != null) {
-      ///
-      ///Inherit Theme and MediaQuery of app
-      ///
-      ///
-      child = InheritedTheme.captureAll(
-        context,
-        MediaQuery(data: MediaQuery.of(context), child: Material(color: Colors.transparent, child: child)),
-      );
-    }
+    final FlutterView view = View.of(context);
+
+    ///
+    ///Inherit Theme and MediaQuery of app
+    ///
+    child = InheritedTheme.captureAll(
+      context,
+      MediaQuery(data: MediaQueryData.fromView(view), child: Material(color: Colors.transparent, child: child)),
+    );
 
     final RenderRepaintBoundary repaintBoundary = RenderRepaintBoundary();
-    final platformDispatcher = WidgetsBinding.instance.platformDispatcher;
-    final fallBackView = platformDispatcher.views.first;
-    final view = context == null ? fallBackView : View.maybeOf(context) ?? fallBackView;
     Size logicalSize = targetSize ?? view.physicalSize / view.devicePixelRatio; // Adapted
     Size imageSize = targetSize ?? view.physicalSize; // Adapted
 
@@ -167,11 +163,8 @@ extension GetImageFromWidget on Widget {
       view: view,
       child: RenderPositionedBox(alignment: Alignment.center, child: repaintBoundary),
       configuration: ViewConfiguration(
-        // size: logicalSize,
-        logicalConstraints: BoxConstraints(
-          maxWidth: logicalSize.width,
-          maxHeight: logicalSize.height,
-        ),
+        physicalConstraints: BoxConstraints.tight(logicalSize) * view.devicePixelRatio,
+        logicalConstraints: BoxConstraints.tight(logicalSize),
         devicePixelRatio: pixelRatio ?? 1.0,
       ),
     );
@@ -194,17 +187,12 @@ extension GetImageFromWidget on Widget {
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: child,
-        )).attachToRenderTree(
-      buildOwner,
-    );
+        )).attachToRenderTree(buildOwner);
     ////
     ///Render Widget
     ///
-    ///
 
-    buildOwner.buildScope(
-      rootElement,
-    );
+    buildOwner.buildScope(rootElement);
     buildOwner.finalizeTree();
 
     pipelineOwner.flushLayout();
@@ -216,7 +204,6 @@ extension GetImageFromWidget on Widget {
     do {
       ///
       ///Reset the dirty flag
-      ///
       ///
       isDirty = false;
 
@@ -231,15 +218,11 @@ extension GetImageFromWidget on Widget {
       ///
       ///Check does this require rebuild
       ///
-      ///
       if (isDirty) {
         ///
         ///Previous capture has been updated, re-render again.
         ///
-        ///
-        buildOwner.buildScope(
-          rootElement,
-        );
+        buildOwner.buildScope(rootElement);
         buildOwner.finalizeTree();
         pipelineOwner.flushLayout();
         pipelineOwner.flushCompositingBits();
@@ -261,76 +244,12 @@ extension GetImageFromWidget on Widget {
 
     return image; // Adapted to directly return the image and not the Uint8List
   }
+}
 
-  /// Captures a widget-frame that is not build in a widget tree.
-  /// Inspired by [screenshot plugin](https://github.com/SachinGanesh/screenshot)
-  // ui.Image _captureWidget(Widget widget) {
-  //   assert(context != null,
-  //   "Capturing from widget requires valid context of in RenderCapturer.");
-  //   try {
-  //     final RenderRepaintBoundary repaintBoundary = RenderRepaintBoundary();
-  //
-  //     final flutterView = View.of(context!);
-  //     Size logicalSize =
-  //         flutterView.physicalSize / flutterView.devicePixelRatio;
-  //     Size imageSize = flutterView.physicalSize;
-  //
-  //     assert(logicalSize.aspectRatio.toStringAsPrecision(5) ==
-  //         imageSize.aspectRatio.toStringAsPrecision(5));
-  //
-  //     final RenderView renderView = RenderView(
-  //       view: flutterView,
-  //       child: RenderPositionedBox(
-  //           alignment: Alignment.center, child: repaintBoundary),
-  //       configuration: ViewConfiguration(
-  //         physicalConstraints:
-  //         BoxConstraints.tight(logicalSize) * flutterView.devicePixelRatio,
-  //         logicalConstraints: BoxConstraints.tight(logicalSize),
-  //         devicePixelRatio: session.settings.pixelRatio,
-  //       ),
-  //     );
-  //
-  //     final PipelineOwner pipelineOwner = PipelineOwner();
-  //     final BuildOwner buildOwner =
-  //     BuildOwner(focusManager: FocusManager(), onBuildScheduled: () {});
-  //
-  //     pipelineOwner.rootNode = renderView;
-  //     renderView.prepareInitialFrame();
-  //
-  //     final RenderObjectToWidgetElement<RenderBox> rootElement =
-  //     RenderObjectToWidgetAdapter<RenderBox>(
-  //         container: repaintBoundary,
-  //         child: Directionality(
-  //           textDirection: TextDirection.ltr,
-  //           child: widget,
-  //         )).attachToRenderTree(
-  //       buildOwner,
-  //     );
-  //     buildOwner.buildScope(
-  //       rootElement,
-  //     );
-  //     buildOwner.finalizeTree();
-  //
-  //     pipelineOwner.flushLayout();
-  //     pipelineOwner.flushCompositingBits();
-  //     pipelineOwner.flushPaint();
-  //     /*
-  //     try {
-  //       /// Dispose All widgets
-  //       rootElement.visitChildren((Element element) {
-  //         rootElement.deactivateChild(element);
-  //       });
-  //       buildOwner.finalizeTree();
-  //     } catch (_) {}
-  //      */
-  //
-  //     return repaintBoundary.toImageSync(
-  //         pixelRatio: session.settings.pixelRatio);
-  //   } catch (e) {
-  //     throw RenderException(
-  //       "Unknown error while capturing frame context. Trying next frame.",
-  //       details: e,
-  //     );
-  //   }
-  // }
+extension GetImageProviderFromUiImage on ui.Image {
+  Future<ImageProvider?> imageProvider(ui.ImageByteFormat format) async {
+    final ByteData? byteData = await toByteData(format: format);
+    if (byteData == null) return null;
+    return MemoryImage(byteData.buffer.asUint8List());
+  }
 }
