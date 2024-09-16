@@ -26,8 +26,8 @@ class NNImage extends StatelessWidget {
     this.height,
     BoxFit? fit,
     ImageWidgetBuilder? imageBuilder,
-    PlaceholderWidgetBuilder? placeholder,
-    LoadingErrorWidgetBuilder? errorWidget,
+    PlaceholderWidgetBuilder? placeholder = defaultPlaceHolderWidgetBuilder,
+    LoadingErrorWidgetBuilder? errorWidget = defaultErrorWidgetBuilder,
     Duration fadeInDuration = const Duration(milliseconds: 500),
     Duration? fadeOutDuration = const Duration(milliseconds: 1000),
     Duration? placeholderFadeInDuration,
@@ -55,7 +55,11 @@ class NNImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imageUrl.isEmpty) {
-      return SizedBox(width: width, height: height);
+      return SizedBox(
+        width: width,
+        height: height,
+        child: _image.errorWidget?.call(context, imageUrl, "imageUrl isEmpty"),
+      );
     }
     return _image;
   }

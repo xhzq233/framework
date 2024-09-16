@@ -83,18 +83,33 @@ class NNRefreshIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return EasyRefresh(
       header: BuilderHeader(
-          triggerOffset: 0,
+          triggerOffset: 24 + 16 * 2,
           clamping: false,
           position: IndicatorPosition.behind,
           hapticFeedback: true,
           builder: (BuildContext context, IndicatorState state) {
-            if (state.mode == IndicatorMode.inactive) {
-              return const SizedBox.shrink();
+            switch (state.mode) {
+              case IndicatorMode.inactive:
+                return const SizedBox.shrink();
+              case IndicatorMode.drag:
+              case IndicatorMode.armed:
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16, bottom: 16),
+                  child: Align(child: NNProgress(value: state.offset / 64)),
+                );
+              case IndicatorMode.ready:
+              case IndicatorMode.processing:
+              case IndicatorMode.processed:
+              case IndicatorMode.secondaryArmed:
+              case IndicatorMode.secondaryReady:
+              case IndicatorMode.secondaryOpen:
+              case IndicatorMode.secondaryClosing:
+              case IndicatorMode.done:
+                return const Padding(
+                  padding: EdgeInsets.only(top: 16, bottom: 16),
+                  child: Align(child: NNProgress()),
+                );
             }
-            return Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 16),
-              child: Align(child: NNProgress(value: state.mode == IndicatorMode.drag ? state.offset / 64 : null)),
-            );
           }),
       onRefresh: onRefresh,
       child: child,

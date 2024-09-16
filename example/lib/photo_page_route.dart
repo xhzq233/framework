@@ -10,9 +10,7 @@ class PreviewImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tag = hashCode;
-    final child = NNImage(
-      'https://lh3.googleusercontent.com/a/ACg8ocL4WP-p7O2QFVE5QEt5LrTPSr34ZmIpir2zxHIVryT2LYNoIzo=s96-c',
-    );
+    final child = NNImage('https://q1.qlogo.cn/g?b=qq&nk=1761373255&s=100');
     return GestureDetector(
       onTap: () => Navigator.of(context).push(PhotoPageRoute(draggableChild: child, heroTag: tag)),
       child: Hero(
@@ -24,9 +22,7 @@ class PreviewImage extends StatelessWidget {
 }
 
 void main() {
-  runApp(
-    const MaterialApp(home: _Home()),
-  );
+  runApp(const MaterialApp(home: _Home()));
 }
 
 class _Home extends StatelessWidget {
@@ -34,11 +30,23 @@ class _Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AnnotatedRegion(
+    return AnnotatedRegion(
       value: SystemUiOverlayStyle.dark,
-      child: ColoredBox(
-        color: Colors.green,
-        child: Align(child: PreviewImage()),
+      child: NNRefreshIndicator(
+        onRefresh: () {
+          (context as Element).markNeedsBuild();
+          return Future.delayed(const Duration(seconds: 1));
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              child: ColoredBox(
+                color: Colors.green.withOpacity(0.6),
+                child: const Align(child: PreviewImage()),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

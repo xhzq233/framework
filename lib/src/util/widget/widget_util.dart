@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart';
 
 import '../../logger/logger.dart';
 import 'dart:async';
@@ -126,19 +125,12 @@ extension CompressedImageAssetsGetter on String {
 }
 
 extension GetImageFromWidget on BuildContext {
-  /// If you are building a desktop/web application that supports multiple view. Consider passing the [context] so that flutter know which view to capture.
   Future<ui.Image> toUiImage(
     Widget widget, {
     Duration delay = const Duration(seconds: 1),
     double? pixelRatio,
     Size? targetSize,
   }) async {
-    ///
-    ///Retry counter
-    ///
-    int retryCounter = 3;
-    bool isDirty = false;
-
     Widget child = widget;
     BuildContext context = this;
 
@@ -170,14 +162,7 @@ extension GetImageFromWidget on BuildContext {
     );
 
     final PipelineOwner pipelineOwner = PipelineOwner();
-    final BuildOwner buildOwner = BuildOwner(
-        focusManager: FocusManager(),
-        onBuildScheduled: () {
-          ///
-          ///current render is dirty, mark it.
-          ///
-          isDirty = true;
-        });
+    final BuildOwner buildOwner = BuildOwner(focusManager: FocusManager(), onBuildScheduled: () {});
 
     pipelineOwner.rootNode = renderView;
     renderView.prepareInitialFrame();
@@ -199,48 +184,12 @@ extension GetImageFromWidget on BuildContext {
     pipelineOwner.flushCompositingBits();
     pipelineOwner.flushPaint();
 
-    ui.Image? image;
-
-    do {
-      ///
-      ///Reset the dirty flag
-      ///
-      isDirty = false;
-
-      image = await repaintBoundary.toImage(pixelRatio: pixelRatio ?? (imageSize.width / logicalSize.width));
-
-      ///
-      ///This delay sholud increas with Widget tree Size
-      ///
-
-      await Future.delayed(delay);
-
-      ///
-      ///Check does this require rebuild
-      ///
-      if (isDirty) {
-        ///
-        ///Previous capture has been updated, re-render again.
-        ///
-        buildOwner.buildScope(rootElement);
-        buildOwner.finalizeTree();
-        pipelineOwner.flushLayout();
-        pipelineOwner.flushCompositingBits();
-        pipelineOwner.flushPaint();
-      }
-      retryCounter--;
-
-      ///
-      ///retry untill capture is successfull
-      ///
-    } while (isDirty && retryCounter >= 0);
-    try {
-      /// Dispose All widgets
-      // rootElement.visitChildren((Element element) {
-      //   rootElement.deactivateChild(element);
-      // });
-      buildOwner.finalizeTree();
-    } catch (e) {}
+    ui.Image image = await repaintBoundary.toImage(pixelRatio: pixelRatio ?? (imageSize.width / logicalSize.width));
+    /// Dispose All widgets
+    // rootElement.visitChildren((Element element) {
+    //   rootElement.deactivateChild(element);
+    // });
+    buildOwner.finalizeTree();
 
     return image; // Adapted to directly return the image and not the Uint8List
   }
