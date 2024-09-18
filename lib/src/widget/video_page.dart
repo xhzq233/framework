@@ -19,9 +19,15 @@ final CacheManager _videoCacheManager = CacheManager(Config(
 ));
 
 const _defaultPlaceHolder = SizedBox(width: 60, height: 60);
+const double _defaultIconSize = 36;
 
 class VideoThumbWidget extends StatefulWidget {
-  const VideoThumbWidget({super.key, required this.videoUrl, this.placeholder = _defaultPlaceHolder});
+  const VideoThumbWidget({
+    super.key,
+    required this.videoUrl,
+    this.placeholder = _defaultPlaceHolder,
+    this.iconSize = _defaultIconSize,
+  });
 
   static void clearCache() {
     _videoCacheManager.emptyCache();
@@ -29,6 +35,7 @@ class VideoThumbWidget extends StatefulWidget {
 
   final String videoUrl;
   final Widget placeholder;
+  final double iconSize;
 
   @override
   State<VideoThumbWidget> createState() => _VideoThumbWidgetState();
@@ -36,9 +43,10 @@ class VideoThumbWidget extends StatefulWidget {
 
 class _VideoThumbWidgetState extends State<VideoThumbWidget> {
   double? downloadProgress;
-  FileInfo? _fileInfo;
+  File? _fileInfo;
   StreamSubscription<FileResponse>? _fileStreamSubscription;
   late final Object heroTag = hashCode;
+  final GlobalKey videoPageRouteKey = GlobalKey();
 
   void _startDownload() {
     if (_fileInfo != null || _fileStreamSubscription != null) {
@@ -52,7 +60,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
           });
         } else if (event is FileInfo) {
           setState(() {
-            _fileInfo = event;
+            _fileInfo = event.file;
             _fileStreamSubscription = null;
           });
         }
@@ -71,7 +79,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
 
   void _tap() {
     if (_fileInfo != null) {
-      if (_fileInfo!.file.existsSync() == false) {
+      if (_fileInfo!.existsSync() == false) {
         _reset();
         return;
       }
@@ -80,7 +88,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
           PhotoPageRoute(
               draggableChild: SizedBox(
                 width: MediaQuery.sizeOf(context).width,
-                child: _VideoWidget(videoFile: _fileInfo!.file),
+                child: _VideoWidget(videoFile: _fileInfo!, key: videoPageRouteKey),
               ),
               heroTag: heroTag));
     } else {
@@ -94,7 +102,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
     _videoCacheManager.getFileFromCache(widget.videoUrl).then((FileInfo? file) {
       if (file != null) {
         setState(() {
-          _fileInfo = file;
+          _fileInfo = file.file;
         });
       }
     });
@@ -118,11 +126,11 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
   Widget build(BuildContext context) {
     Widget icon;
     if (_fileInfo != null) {
-      icon = const Icon(CupertinoIcons.play_circle, color: Colors.white, size: 36);
+      icon = Icon(CupertinoIcons.play_circle, color: Colors.white, size: widget.iconSize);
     } else if (downloadProgress != null) {
       icon = Align(child: CircularProgressIndicator(value: downloadProgress, color: Colors.white));
     } else {
-      icon = const Icon(CupertinoIcons.down_arrow, color: Colors.white, size: 36);
+      icon = Icon(CupertinoIcons.down_arrow, color: Colors.white, size: widget.iconSize);
     }
 
     return CustomCupertinoButton(
@@ -146,7 +154,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
 }
 
 class _VideoWidget extends StatefulWidget {
-  const _VideoWidget({required this.videoFile});
+  const _VideoWidget({super.key, required this.videoFile});
 
   final File videoFile;
 
@@ -240,7 +248,7 @@ class _ControlsOverlay extends StatelessWidget {
     return Stack(
       children: <Widget>[
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 50),
+          duration: const Duration(milliseconds: 150),
           reverseDuration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
               ? const SizedBox.shrink()
