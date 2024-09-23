@@ -11,7 +11,6 @@ import 'package:framework/cupertino.dart';
 import 'package:framework/route.dart';
 import 'package:video_player/video_player.dart';
 
-// todo
 final CacheManager _videoCacheManager = CacheManager(Config(
   'video_cache',
   maxNrOfCacheObjects: 500,
@@ -48,26 +47,6 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
   late final Object heroTag = hashCode;
   final GlobalKey videoPageRouteKey = GlobalKey();
 
-  void _startDownload() {
-    if (_fileInfo != null || _fileStreamSubscription != null) {
-      return;
-    }
-    _fileStreamSubscription = _videoCacheManager.getFileStream(widget.videoUrl, withProgress: true).listen(
-      (FileResponse event) {
-        if (event is DownloadProgress) {
-          setState(() {
-            downloadProgress = event.progress;
-          });
-        } else if (event is FileInfo) {
-          setState(() {
-            _fileInfo = event.file;
-            _fileStreamSubscription = null;
-          });
-        }
-      },
-    );
-  }
-
   void _reset() {
     setState(() {
       downloadProgress = null;
@@ -81,6 +60,7 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
     if (_fileInfo != null) {
       if (_fileInfo!.existsSync() == false) {
         _reset();
+        _init();
         return;
       }
       Navigator.push(
@@ -92,20 +72,38 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
               ),
               heroTag: heroTag));
     } else {
-      _startDownload();
+      _init();
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _videoCacheManager.getFileFromCache(widget.videoUrl).then((FileInfo? file) {
-      if (file != null) {
-        setState(() {
-          _fileInfo = file.file;
-        });
-      }
-    });
+    _init();
+  }
+
+  void _init() async {
+    final FileInfo? file = await _videoCacheManager.getFileFromCache(widget.videoUrl);
+    if (file != null) {
+      setState(() {
+        _fileInfo = file.file;
+      });
+    } else {
+      _fileStreamSubscription = _videoCacheManager.getFileStream(widget.videoUrl, withProgress: true).listen(
+        (FileResponse event) {
+          if (event is DownloadProgress) {
+            setState(() {
+              downloadProgress = event.progress;
+            });
+          } else if (event is FileInfo) {
+            setState(() {
+              _fileInfo = event.file;
+              _fileStreamSubscription = null;
+            });
+          }
+        },
+      );
+    }
   }
 
   @override
@@ -119,18 +117,17 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.videoUrl != widget.videoUrl) {
       _reset();
+      _init();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget icon;
+    Widget icon = const SizedBox.shrink();
     if (_fileInfo != null) {
       icon = Icon(CupertinoIcons.play_circle, color: Colors.white, size: widget.iconSize);
     } else if (downloadProgress != null) {
       icon = Align(child: CircularProgressIndicator(value: downloadProgress, color: Colors.white));
-    } else {
-      icon = Icon(CupertinoIcons.down_arrow, color: Colors.white, size: widget.iconSize);
     }
 
     return CustomCupertinoButton(
@@ -248,7 +245,7 @@ class _ControlsOverlay extends StatelessWidget {
     return Stack(
       children: <Widget>[
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 100),
           reverseDuration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
               ? const SizedBox.shrink()
