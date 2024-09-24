@@ -83,6 +83,7 @@ class ProviderWidget<T extends Listenable> extends InheritedWidget {
 
   /// Builder 模式，ProviderBuilder 用于懒加载 Provider 实例
   /// Provider 生命周期由 ProviderWidget 管理
+  /// [provider] runtimeType 改变时，会重新初始化 Provider 实例
   const ProviderWidget.owned({
     super.key,
     required ProviderBuilder<T> provider,
@@ -148,7 +149,7 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
 
   @override
   void update(ProviderWidget<T> newWidget) {
-    if (widget.providerBuilder != newWidget.providerBuilder) {
+    if (widget.providerBuilder.runtimeType != newWidget.providerBuilder.runtimeType) {
       // ProviderBuilder 变化，重新初始化
       // 释放旧 Provider 实例
       if (widget.providerBuilder != null || lazyProviderInstance != null) _tryDisposeLazyProvider();

@@ -21,6 +21,8 @@ class MyProvider extends Provider {
   }
 }
 
+class MyProvider2 extends Provider {}
+
 void main() {
   testWidgets('MyProvider Accessibility', (tester) async {
     await tester.pumpWidget(ProviderWidget(provider: MyProvider(), child: const SizedBox()));
@@ -47,7 +49,7 @@ void main() {
   testWidgets('MyProvider not dispose after unmount with ProviderWidget', (tester) async {
     await tester.pumpWidget(ProviderWidget(provider: MyProvider(), child: const SizedBox()));
     final provider = Provider.read<MyProvider>(tester.element(find.byType(SizedBox)));
-    final providerElement = getProviderElement(tester);
+    final providerElement = tester.providerElement;
     expect(provider.disposed, isFalse);
     expect(providerElement.lazyProviderInstance, isNull);
     await tester.pumpWidget(const SizedBox());
@@ -58,7 +60,7 @@ void main() {
   testWidgets('MyProvider dispose after unmount', (tester) async {
     await tester.pumpWidget(ProviderWidget.owned(provider: (ctx) => MyProvider(), child: const SizedBox()));
     final provider = Provider.read<MyProvider>(tester.element(find.byType(SizedBox)));
-    final providerElement = getProviderElement(tester);
+    final providerElement = tester.providerElement;
     expect(providerElement.lazyProviderInstance, isNotNull);
     expect(provider.disposed, isFalse);
     await tester.pumpWidget(const SizedBox());
@@ -68,17 +70,20 @@ void main() {
 
   testWidgets('MyProvider lazy create', (tester) async {
     await tester.pumpWidget(ProviderWidget.owned(provider: (ctx) => MyProvider(), child: const SizedBox()));
-    final dynamic element = getProviderElement(tester);
-    expect(element.lazyProviderInstance, isNull);
-    Provider.read<MyProvider>(element);
-    expect(element.lazyProviderInstance, isNotNull);
+    expect(tester.lazyProviderInstance, isNull);
+    Provider.read<MyProvider>(tester.element(find.byType(SizedBox)));
+    expect(tester.lazyProviderInstance, isNotNull);
   });
 }
 
-dynamic getProviderElement(WidgetTester tester) {
-  final dynamic providerElement = tester.element(find.bySubtype<ProviderWidget>());
-  expect(providerElement, isNotNull);
-  expect(providerElement, isA<InheritedElement>());
-  expect(providerElement.runtimeType.toString(), contains('_ProviderElement'));
-  return providerElement;
+extension GetProviderLazyProviderInstance on WidgetTester {
+  Provider? get lazyProviderInstance => providerElement.lazyProviderInstance;
+
+  dynamic get providerElement {
+    final dynamic providerElement = element(find.bySubtype<ProviderWidget>());
+    expect(providerElement, isNotNull);
+    expect(providerElement, isA<InheritedElement>());
+    expect(providerElement.runtimeType.toString(), contains('_ProviderElement'));
+    return providerElement;
+  }
 }
