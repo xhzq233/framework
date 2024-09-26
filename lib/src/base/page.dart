@@ -36,24 +36,17 @@ class CustomPage extends StatelessWidget {
   const CustomPage({
     super.key,
     required this.child,
-    this.background,
+    this.background = const _DefaultBg(),
     this.title,
     this.bodyPadding = EdgeInsets.zero,
+    this.navigationBarItem,
   });
 
-  // 带导航栏
-  const CustomPage.withNavigationBar({
-    super.key,
-    required this.child,
-    required this.title,
-    this.bodyPadding = EdgeInsets.zero,
-  })  : background = const _DefaultBg(),
-        assert(title != null);
-
   final Widget child;
-  final Widget? background;
+  final Widget background;
   final String? title;
   final EdgeInsets bodyPadding;
+  final Widget? navigationBarItem;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +83,7 @@ class CustomPage extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (background != null) background!,
+            background,
             Padding(padding: bodyPadding_, child: child),
             backButton,
             if (title != null)
@@ -106,6 +99,13 @@ class CustomPage extends StatelessWidget {
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
                   ),
                 ),
+              ),
+            if (navigationBarItem != null)
+              Positioned(
+                top: top,
+                right: 16,
+                height: kNavigationBarHeight,
+                child: navigationBarItem!,
               ),
             Positioned(
               top: 0,
