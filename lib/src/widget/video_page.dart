@@ -1,6 +1,3 @@
-/// EcsMerchantApp - video_page
-/// Created by xhz on 9/12/24
-
 import 'dart:async';
 import 'dart:io';
 
@@ -9,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:framework/cupertino.dart';
 import 'package:framework/route.dart';
+import 'package:framework/src/route/root_navigator.dart';
 import 'package:video_player/video_player.dart';
 
+// todo
 final CacheManager _videoCacheManager = CacheManager(Config(
   'video_cache',
   maxNrOfCacheObjects: 500,
@@ -63,14 +62,12 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
         _init();
         return;
       }
-      Navigator.push(
-          context,
-          PhotoPageRoute(
-              draggableChild: SizedBox(
-                width: MediaQuery.sizeOf(context).width,
-                child: _VideoWidget(videoFile: _fileInfo!, key: videoPageRouteKey),
-              ),
-              heroTag: heroTag));
+      rootNavigator.push(PhotoPageRoute(
+          draggableChild: SizedBox(
+            width: MediaQuery.sizeOf(context).width,
+            child: _VideoWidget(videoFile: _fileInfo!, key: videoPageRouteKey),
+          ),
+          heroTag: heroTag));
     } else {
       _init();
     }
@@ -135,6 +132,57 @@ class _VideoThumbWidgetState extends State<VideoThumbWidget> {
       child: Stack(
         children: [
           Hero(tag: heroTag, child: widget.placeholder),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              child: icon,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LocalVideoThumbWidget extends StatelessWidget {
+  const LocalVideoThumbWidget({
+    super.key,
+    required this.fileUrl,
+    this.placeholder = _defaultPlaceHolder,
+    this.iconSize = _defaultIconSize,
+  });
+
+  final String fileUrl;
+  final Widget placeholder;
+  final double iconSize;
+
+  void _tap(BuildContext context) {
+    if (File(fileUrl).existsSync() == false) {
+      return;
+    }
+    final GlobalKey videoPageRouteKey = GlobalKey();
+    rootNavigator.push(
+      PhotoPageRoute(
+          draggableChild: SizedBox(
+            width: MediaQuery.sizeOf(context).width,
+            child: _VideoWidget(videoFile: File(fileUrl), key: videoPageRouteKey),
+          ),
+          heroTag: hashCode),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget icon = Icon(CupertinoIcons.play_circle, color: Colors.white, size: iconSize);
+
+    return CustomCupertinoButton(
+      onTap: () => _tap(context),
+      child: Stack(
+        children: [
+          Hero(tag: hashCode, child: placeholder),
           Positioned.fill(
             child: DecoratedBox(
               decoration: const BoxDecoration(

@@ -18,7 +18,7 @@ dependencies:
   equatable: ^2.0.5
   cached_network_image: ^3.0.0
   flutter_cache_manager: ^3.0.0
-  video_player: ^2.9.1
+  video_player: ^2.0.0
   easy_refresh: ^3.4.0
 
 dev_dependencies:

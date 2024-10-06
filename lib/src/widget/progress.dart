@@ -73,46 +73,68 @@ class _NNProgressState extends State<NNProgress> with SingleTickerProviderStateM
 }
 
 class NNRefreshIndicator extends StatelessWidget {
-  const NNRefreshIndicator({super.key, required this.onRefresh, required this.child});
+  const NNRefreshIndicator({
+    super.key,
+    required this.onRefresh,
+    required this.child,
+    this.onLoad,
+    this.hasMore = true,
+  });
 
   final FutureOr<void> Function() onRefresh;
+  final FutureOr Function()? onLoad;
+  final bool hasMore;
 
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return EasyRefresh(
-      header: BuilderHeader(
-          triggerOffset: 24 + 16 * 2,
+      header: const BuilderHeader(
+          triggerOffset: 0,
           clamping: false,
+          processedDuration: Duration.zero,
           position: IndicatorPosition.behind,
           hapticFeedback: true,
-          builder: (BuildContext context, IndicatorState state) {
-            switch (state.mode) {
-              case IndicatorMode.inactive:
-                return const SizedBox.shrink();
-              case IndicatorMode.drag:
-              case IndicatorMode.armed:
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 16),
-                  child: Align(child: NNProgress(value: state.offset / 64)),
-                );
-              case IndicatorMode.ready:
-              case IndicatorMode.processing:
-              case IndicatorMode.processed:
-              case IndicatorMode.secondaryArmed:
-              case IndicatorMode.secondaryReady:
-              case IndicatorMode.secondaryOpen:
-              case IndicatorMode.secondaryClosing:
-              case IndicatorMode.done:
-                return const Padding(
-                  padding: EdgeInsets.only(top: 16, bottom: 16),
-                  child: Align(child: NNProgress()),
-                );
-            }
-          }),
+          builder: _builder),
+      footer: onLoad != null
+          ? const BuilderFooter(
+        builder: _builder,
+        triggerOffset: 0,
+        clamping: false,
+        processedDuration: Duration.zero,
+        position: IndicatorPosition.behind,
+        hapticFeedback: true,
+      )
+          : null,
+      onLoad: hasMore ? onLoad : null,
       onRefresh: onRefresh,
       child: child,
     );
+  }
+}
+
+Widget _builder(BuildContext context, IndicatorState state) {
+  switch (state.mode) {
+    case IndicatorMode.inactive:
+    case IndicatorMode.processed:
+    case IndicatorMode.done:
+      return const SizedBox.shrink();
+    case IndicatorMode.drag:
+    case IndicatorMode.armed:
+      return Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 16),
+        child: Align(child: NNProgress(value: state.offset / 64)),
+      );
+    case IndicatorMode.ready:
+    case IndicatorMode.processing:
+    case IndicatorMode.secondaryArmed:
+    case IndicatorMode.secondaryReady:
+    case IndicatorMode.secondaryOpen:
+    case IndicatorMode.secondaryClosing:
+      return const Padding(
+        padding: EdgeInsets.only(top: 16, bottom: 16),
+        child: Align(child: NNProgress()),
+      );
   }
 }
