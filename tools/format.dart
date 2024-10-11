@@ -118,9 +118,10 @@ Future<ProcessResult> _runCommand(String command, List<String> args, {bool needS
 }
 
 Future<Iterable<String>> _changedFiles([bool staged = true]) async {
+  // Filter deleted files
   final ProcessResult changedFiles = await _runCommand(
     'git',
-    ['diff', '--name-only', if (staged) '--staged', 'HEAD'],
+    ['diff', '--name-only', if (staged) '--staged', '--diff-filter=d', 'HEAD'],
     needStdout: false,
   );
   return changedFiles.stdout.toString().split('\n');
