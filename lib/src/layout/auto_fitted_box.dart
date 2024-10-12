@@ -26,7 +26,7 @@ class AutoFittedBoxyDelegate extends BoxyDelegate {
     final Size fatherSize = constraints.biggest;
 
     //按照原来的大小让子组件布局，得到应有的大小
-    Size childSize = child.layout(BoxConstraints(maxWidth: originalSize.width, maxHeight: originalSize.height));
+    Size childSize = child.layout(BoxConstraints.loose(originalSize));
 
     //依据原来的大小，取长宽缩放的最小值计算出缩放比例，将constraints填满，同时不超过上下限
     final scale = math

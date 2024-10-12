@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../logger/logger.dart';
 import 'dart:async';
 
 extension GetRectOnRenderBox on GlobalKey {
@@ -18,18 +17,6 @@ extension GetRectOnRenderBox on GlobalKey {
           renderBoxContainer.paintBounds.topLeft,
         ),
         renderBoxContainer.localToGlobal(renderBoxContainer.paintBounds.bottomRight));
-  }
-}
-
-Color colorFromHex(String hexString) {
-  try {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
-  } catch (e, s) {
-    logger.e('color', 'parse color error $hexString', e, s);
-    return const Color(0x00000000);
   }
 }
 
