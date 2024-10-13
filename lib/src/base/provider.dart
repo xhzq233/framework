@@ -78,12 +78,13 @@ abstract class Provider with ChangeNotifier {
 }
 
 abstract class AspectProvider extends Provider {
-  final Set<Object> _aspects = {};
+  Object? _aspect;
 
   @protected
   void notifyAspectListeners(Object aspect) {
-    _aspects.add(aspect);
+    _aspect = aspect;
     notifyListeners();
+    _aspect = null;
   }
 }
 
@@ -117,13 +118,21 @@ class ProviderWidget<T extends Listenable> extends InheritedWidget {
   }
 
   @override
-  InheritedElement createElement() => _ProviderElement<T>(this);
+  InheritedElement createElement() {
+    if (providerBuilder != null && providerBuilder is ProviderBuilder<AspectProvider>) {
+      return _AspectProviderElement<T>(this);
+    }
+    if (providerInstance != null && providerInstance is AspectProvider) {
+      return _AspectProviderElement<T>(this);
+    }
+    return _ProviderElement<T>(this);
+  }
 }
 
 class _ProviderElement<T extends Listenable> extends InheritedElement {
   _ProviderElement(ProviderWidget<T> widget) : super(widget) {
     // If not owned, listen to the provider instance immediately
-    widget.providerInstance?.addListener(_handleUpdate);
+    widget.providerInstance?.addListener(handleUpdate);
   }
 
   @override
@@ -149,11 +158,11 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
       lazyProviderInstance = widget.providerBuilder!(this);
     }
     assert(lazyProviderInstance != null, 'Provider instance should not be null');
-    lazyProviderInstance?.addListener(_handleUpdate);
+    lazyProviderInstance?.addListener(handleUpdate);
   }
 
   void _tryDisposeLazyProvider() {
-    lazyProviderInstance?.removeListener(_handleUpdate);
+    lazyProviderInstance?.removeListener(handleUpdate);
     if (lazyProviderInstance is ChangeNotifier) {
       (lazyProviderInstance as ChangeNotifier).dispose();
     }
@@ -161,7 +170,7 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
   }
 
   void _tryRemoveListener() {
-    widget.providerInstance?.removeListener(_handleUpdate);
+    widget.providerInstance?.removeListener(handleUpdate);
   }
 
   @override
@@ -174,7 +183,7 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
     if (widget.providerInstance != newWidget.providerInstance) {
       // Provider 实例变化，重新添加监听
       _tryRemoveListener();
-      newWidget.providerInstance?.addListener(_handleUpdate);
+      newWidget.providerInstance?.addListener(handleUpdate);
     }
     super.update(newWidget);
   }
@@ -187,10 +196,30 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
     return super.build();
   }
 
-  void _handleUpdate() {
+  @mustCallSuper
+  void handleUpdate() {
     _dirty = true;
     markNeedsBuild();
   }
+
+  @override
+  void notifyClients(ProviderWidget<T> oldWidget) {
+    super.notifyClients(oldWidget);
+    _dirty = false;
+  }
+
+  @override
+  void unmount() {
+    _tryDisposeLazyProvider();
+    _tryRemoveListener();
+    super.unmount();
+  }
+}
+
+class _AspectProviderElement<T extends Listenable> extends _ProviderElement<T> {
+  _AspectProviderElement(super.widget);
+
+  final Set<Object> appliedAspects = {};
 
   @override
   void updateDependencies(Element dependent, Object? aspect) {
@@ -204,34 +233,29 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
   }
 
   @override
-  void notifyClients(ProviderWidget<T> oldWidget) {
-    super.notifyClients(oldWidget);
-    _dirty = false;
-    if (providerInstance is AspectProvider) {
-      // (providerInstance as AspectProvider)._aspects.clear();
+  void handleUpdate() {
+    super.handleUpdate();
+    final Object? aspect = (providerInstance as AspectProvider)._aspect;
+    if (aspect != null) {
+      appliedAspects.add(aspect);
     }
+  }
+
+  @override
+  void notifyClients(covariant ProviderWidget<T> oldWidget) {
+    super.notifyClients(oldWidget);
+    appliedAspects.clear();
   }
 
   @override
   void notifyDependent(covariant InheritedWidget oldWidget, Element dependent) {
     bool shouldNotify = true;
-    if (providerInstance is AspectProvider) {
-      final Set<Object>? dependencies = getDependencies(dependent) as Set<Object>?;
-
-      if (dependencies != null && dependencies.isNotEmpty) {
-        final Set<Object> aspects = (providerInstance as AspectProvider)._aspects;
-        shouldNotify = dependencies.any(aspects.contains);
-      }
+    final Set<Object>? dependencies = getDependencies(dependent) as Set<Object>?;
+    if (dependencies != null && dependencies.isNotEmpty) {
+      shouldNotify = dependencies.any(appliedAspects.contains);
     }
     if (shouldNotify) {
       dependent.didChangeDependencies();
     }
-  }
-
-  @override
-  void unmount() {
-    _tryDisposeLazyProvider();
-    _tryRemoveListener();
-    super.unmount();
   }
 }
