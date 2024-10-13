@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  logger: ^2.0.1
   path_provider: ^2.1.0
   boxy: ^2.1.0
   path: ^1.8.3
@@ -19,7 +18,6 @@ dependencies:
   cached_network_image: ^3.0.0
   flutter_cache_manager: ^3.0.0
   video_player: ^2.0.0
-  connectivity_plus: ^4.0.0
   easy_refresh: ^3.4.0
 
 dev_dependencies:

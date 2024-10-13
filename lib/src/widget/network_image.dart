@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:framework/cupertino.dart';
+import 'package:framework/route.dart';
 
 // todo
 final CacheManager _imageCacheManager = CacheManager(Config(
@@ -73,4 +75,31 @@ class NNImageProvider extends CachedNetworkImageProvider {
     super.cacheKey,
     super.errorListener,
   }) : super(cacheManager: _imageCacheManager);
+}
+
+class NNAvatar extends StatelessWidget {
+  const NNAvatar({super.key, required this.imageUrl, this.size = 32});
+
+  final String imageUrl;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaledSize = MediaQuery.textScalerOf(context).scale(size);
+    final tag = hashCode;
+    final child = NNImage(imageUrl, fit: BoxFit.contain);
+    return CustomCupertinoButton(
+      onTap: () => rootNavigator.push(PhotoPageRoute(draggableChild: child, heroTag: tag)),
+      child: SizedBox(
+        width: scaledSize,
+        height: scaledSize,
+        child: FittedBox(
+          child: Hero(
+            tag: tag,
+            child: ClipOval(child: child),
+          ),
+        ),
+      ),
+    );
+  }
 }
