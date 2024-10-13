@@ -5,13 +5,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:framework/base.dart';
 
-class MyProvider extends Provider {
+class MyProvider extends AspectProvider {
   int state = 0;
   bool disposed = false;
 
-  void notify() {
+  @override
+  void notifyListeners() {
     state++;
-    notifyListeners();
+    super.notifyListeners();
   }
 
   @override
@@ -40,7 +41,7 @@ void main() {
     final provider = Provider.read<MyProvider>(tester.element(find.byType(SizedBox)));
     expect(provider.state, 0);
     expect(find.byKey(const ValueKey(0)), findsOneWidget);
-    provider.notify();
+    provider.notifyListeners();
     await tester.pump();
     expect(provider.state, 1);
     expect(find.byKey(const ValueKey(1)), findsOneWidget);
@@ -73,6 +74,44 @@ void main() {
     expect(tester.lazyProviderInstance, isNull);
     Provider.read<MyProvider>(tester.element(find.byType(SizedBox)));
     expect(tester.lazyProviderInstance, isNotNull);
+  });
+
+  testWidgets('MyProvider selectAspect', (tester) async {
+    await tester.pumpWidget(
+      ProviderWidget.owned(
+        provider: (ctx) => MyProvider(),
+        child: Column(
+          children: [
+            Builder(
+              builder: (context) => Align(key: ValueKey(100 + Provider.selectAspect<MyProvider>(context, 'a').state)),
+            ),
+            Builder(
+              builder: (context) => Align(key: ValueKey(10 + Provider.selectAspect<MyProvider>(context, 'b').state)),
+            ),
+            Builder(
+              builder: (context) => Align(key: ValueKey(1000 + Provider.watch<MyProvider>(context).state)),
+            )
+          ],
+        ),
+      ),
+    );
+
+    Provider.read<MyProvider>(tester.element(find.byType(Column))).notifyAspectListeners('a');
+    await tester.pump();
+    expect(find.byKey(const ValueKey(101)), findsOneWidget);
+    expect(find.byKey(const ValueKey(10)), findsOneWidget);
+    expect(find.byKey(const ValueKey(1001)), findsOneWidget);
+    Provider.read<MyProvider>(tester.element(find.byType(Column))).notifyAspectListeners('b');
+    await tester.pump();
+    expect(find.byKey(const ValueKey(101)), findsOneWidget);
+    expect(find.byKey(const ValueKey(12)), findsOneWidget);
+    expect(find.byKey(const ValueKey(1002)), findsOneWidget);
+
+    Provider.read<MyProvider>(tester.element(find.byType(Column))).notifyListeners();
+    await tester.pump();
+    expect(find.byKey(const ValueKey(101)), findsOneWidget);
+    expect(find.byKey(const ValueKey(12)), findsOneWidget);
+    expect(find.byKey(const ValueKey(1003)), findsOneWidget);
   });
 }
 

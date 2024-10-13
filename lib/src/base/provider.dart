@@ -1,6 +1,8 @@
 /// framework - provider
 /// Created by xhz on 8/27/24
 
+import 'dart:collection';
+
 import 'package:flutter/widgets.dart';
 
 /// Provider 类似于 ViewModel，用于绑定数据和 UI，永远使提供的数据保持最新
@@ -61,12 +63,27 @@ abstract class Provider with ChangeNotifier {
     return providerElement.providerInstance;
   }
 
+  static T selectAspect<T extends AspectProvider>(BuildContext context, Object aspect) {
+    context.dependOnInheritedWidgetOfExactType<ProviderWidget<T>>(aspect: aspect);
+    return read<T>(context);
+  }
+
   static T? maybeRead<T extends Listenable>(BuildContext context) {
     final _ProviderElement<T>? providerElement =
         context.getElementForInheritedWidgetOfExactType<ProviderWidget<T>>() as _ProviderElement<T>?;
     if (providerElement == null) return null;
 
     return providerElement.providerInstance;
+  }
+}
+
+abstract class AspectProvider extends Provider {
+  final Set<Object> _aspects = {};
+
+  @protected
+  void notifyAspectListeners(Object aspect) {
+    _aspects.add(aspect);
+    notifyListeners();
   }
 }
 
@@ -176,9 +193,39 @@ class _ProviderElement<T extends Listenable> extends InheritedElement {
   }
 
   @override
+  void updateDependencies(Element dependent, Object? aspect) {
+    if (aspect != null) {
+      // No need to clean up aspects
+      final Set<Object> dependencies = (getDependencies(dependent) as Set<Object>?) ?? HashSet<Object>();
+      setDependencies(dependent, dependencies..add(aspect));
+    } else {
+      setDependencies(dependent, aspect);
+    }
+  }
+
+  @override
   void notifyClients(ProviderWidget<T> oldWidget) {
     super.notifyClients(oldWidget);
     _dirty = false;
+    if (providerInstance is AspectProvider) {
+      // (providerInstance as AspectProvider)._aspects.clear();
+    }
+  }
+
+  @override
+  void notifyDependent(covariant InheritedWidget oldWidget, Element dependent) {
+    bool shouldNotify = true;
+    if (providerInstance is AspectProvider) {
+      final Set<Object>? dependencies = getDependencies(dependent) as Set<Object>?;
+
+      if (dependencies != null && dependencies.isNotEmpty) {
+        final Set<Object> aspects = (providerInstance as AspectProvider)._aspects;
+        shouldNotify = dependencies.any(aspects.contains);
+      }
+    }
+    if (shouldNotify) {
+      dependent.didChangeDependencies();
+    }
   }
 
   @override
