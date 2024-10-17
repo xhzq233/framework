@@ -7,29 +7,27 @@ Future<void> main(List<String> args) async {
   switch (arg) {
     case 'clean-hook':
       final preCommitHook = File('.git/hooks/pre-commit');
-      if (await preCommitHook.exists()) {
-        await preCommitHook.delete();
+      if (preCommitHook.existsSync()) {
+        preCommitHook.deleteSync();
       }
 
       final prePushHook = File('.git/hooks/pre-push');
-      if (await prePushHook.exists()) {
-        await prePushHook.delete();
+      if (prePushHook.existsSync()) {
+        prePushHook.deleteSync();
       }
       _pInfo('Cleaned git hooks');
 
     case 'setup-hook':
       _setupHook('pre-commit', r'''
-#!/usr/bin/env bash
+printf "\033[32mCurrent working directory: $(pwd)\033[0m\n"
 
-# Dart run pre-commit, if exit code is not 0, exit with error code
-dart run tools/format.dart format --add --staged || exit 1
+dart run -r tools/format.dart format --add --staged || exit 1
 ''');
 
       _setupHook('pre-push', r'''
-#!/usr/bin/env bash
+printf "\033[32mCurrent working directory: $(pwd)\033[0m\n"
 
-# Dart run pre-push, if exit code is not 0, exit with error code
-dart run tools/format.dart analyze || exit 1
+dart run -r tools/format.dart analyze || exit 1
 ''');
     case 'format':
       Iterable<String> changedFiles = await _changedFiles(args.contains('--staged'));

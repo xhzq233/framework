@@ -63,6 +63,18 @@ abstract class Provider with ChangeNotifier {
     return providerElement.providerInstance;
   }
 
+  /// 通知监听了特定 aspect 的 ProviderWidget 重新构建
+  ///
+  /// Example:
+  /// ```
+  /// MyProvider extends AspectProvider {
+  ///   void someMethod() {
+  ///     notifyAspectListeners('someAspect');
+  ///   }
+  /// }
+  ///
+  /// Provider.selectAspect<MyProvider>(context, 'someAspect');
+  /// ```
   static T selectAspect<T extends AspectProvider>(BuildContext context, Object aspect) {
     context.dependOnInheritedWidgetOfExactType<ProviderWidget<T>>(aspect: aspect);
     return read<T>(context);
@@ -80,10 +92,13 @@ abstract class Provider with ChangeNotifier {
 abstract class AspectProvider extends Provider {
   Object? _aspect;
 
+  Object? get currentAspect => _aspect;
+
   @protected
   void notifyAspectListeners(Object aspect) {
     _aspect = aspect;
     notifyListeners();
+    // Reset aspect after notify
     _aspect = null;
   }
 }
@@ -244,6 +259,7 @@ class _AspectProviderElement<T extends Listenable> extends _ProviderElement<T> {
   @override
   void notifyClients(covariant ProviderWidget<T> oldWidget) {
     super.notifyClients(oldWidget);
+    // Clean up applied aspects
     appliedAspects.clear();
   }
 

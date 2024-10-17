@@ -112,6 +112,7 @@ extension CompressedImageAssetsGetter on String {
 }
 
 extension GetImageFromWidget on BuildContext {
+  /// Layout at current context size and return the image.
   Future<ui.Image> toUiImage(
     Widget widget, {
     Duration delay = const Duration(seconds: 1),
@@ -122,6 +123,8 @@ extension GetImageFromWidget on BuildContext {
     BuildContext context = this;
 
     final FlutterView view = View.of(context);
+    final double realPixelRatio = pixelRatio ?? view.devicePixelRatio;
+    final Size realLogicalSize = targetSize ?? context.size ?? view.screenSize;
 
     ///
     ///Inherit Theme and MediaQuery of app
@@ -132,19 +135,14 @@ extension GetImageFromWidget on BuildContext {
     );
 
     final RenderRepaintBoundary repaintBoundary = RenderRepaintBoundary();
-    Size logicalSize = targetSize ?? view.physicalSize / view.devicePixelRatio; // Adapted
-    Size imageSize = targetSize ?? view.physicalSize; // Adapted
-
-    assert(logicalSize.aspectRatio.toStringAsPrecision(5) ==
-        imageSize.aspectRatio.toStringAsPrecision(5)); // Adapted (toPrecision was not available)
 
     final RenderView renderView = RenderView(
       view: view,
       child: RenderPositionedBox(alignment: Alignment.center, child: repaintBoundary),
       configuration: ViewConfiguration(
-        physicalConstraints: BoxConstraints.tight(logicalSize) * view.devicePixelRatio,
-        logicalConstraints: BoxConstraints.tight(logicalSize),
-        devicePixelRatio: pixelRatio ?? 1.0,
+        physicalConstraints: BoxConstraints.tight(realLogicalSize) * view.devicePixelRatio,
+        logicalConstraints: BoxConstraints.tight(realLogicalSize),
+        devicePixelRatio: realPixelRatio,
       ),
     );
 
@@ -171,7 +169,8 @@ extension GetImageFromWidget on BuildContext {
     pipelineOwner.flushCompositingBits();
     pipelineOwner.flushPaint();
 
-    ui.Image image = await repaintBoundary.toImage(pixelRatio: pixelRatio ?? (imageSize.width / logicalSize.width));
+    ui.Image image = await repaintBoundary.toImage(pixelRatio: realPixelRatio);
+
     /// Dispose All widgets
     // rootElement.visitChildren((Element element) {
     //   rootElement.deactivateChild(element);
